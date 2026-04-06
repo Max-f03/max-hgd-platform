@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import ClientForm, { type ClientData } from "@/components/dashboard/ClientForm";
@@ -39,6 +39,14 @@ const statusConfig = {
 };
 
 export default function ClientsPage() {
+  return (
+    <Suspense fallback={<div className="p-6 text-center">Chargement...</div>}>
+      <ClientsContent />
+    </Suspense>
+  );
+}
+
+function ClientsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [clients, setClients] = useState(initialClients);
