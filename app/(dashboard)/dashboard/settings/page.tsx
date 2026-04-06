@@ -19,6 +19,7 @@ type StableSnapshot = {
     projectUpdates: boolean;
     weeklyReport: boolean;
     messageAlerts: boolean;
+    language?: string;
   };
   avatarFileName: string;
   activeSection: Section;
@@ -307,7 +308,11 @@ export default function SettingsPage() {
       return;
     }
     setProfileForm(snapshot.profileForm);
-    setPrefs(snapshot.prefs);
+    setPrefs((prev) => ({
+      ...prev,
+      ...snapshot.prefs,
+      language: snapshot.prefs.language ?? prev.language,
+    }));
     setAvatarFileName(snapshot.avatarFileName ?? "");
     setActiveSection(snapshot.activeSection ?? fallbackSection);
   }

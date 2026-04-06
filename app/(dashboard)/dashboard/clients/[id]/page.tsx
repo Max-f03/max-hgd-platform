@@ -81,15 +81,15 @@ const defaultClient: ClientProfile = {
 };
 
 const statusConfig = {
-  lead: { label: "Lead", className: "bg-blue-50 text-blue-700" },
-  active: { label: "Actif", className: "bg-green-50 text-green-700" },
-  completed: { label: "Complete", className: "bg-neutral-100 text-neutral-500" },
+  lead: { label: "Lead", style: { background: "var(--ui-primary-soft)", color: "var(--ui-primary)" } },
+  active: { label: "Actif", style: { background: "rgba(16,185,129,0.16)", color: "#10B981" } },
+  completed: { label: "Complete", style: { background: "var(--d-input)", color: "var(--ui-text-secondary)" } },
 };
 
 const projectStatusConfig = {
-  published: { label: "Publie", className: "bg-green-50 text-green-700" },
-  draft: { label: "Brouillon", className: "bg-amber-50 text-amber-700" },
-  archived: { label: "Archive", className: "bg-neutral-100 text-neutral-500" },
+  published: { label: "Publie", style: { background: "rgba(16,185,129,0.16)", color: "#10B981" } },
+  draft: { label: "Brouillon", style: { background: "rgba(245,158,11,0.18)", color: "#D97706" } },
+  archived: { label: "Archive", style: { background: "var(--d-input)", color: "var(--ui-text-secondary)" } },
 };
 
 interface ClientDetailPageProps {
@@ -134,6 +134,13 @@ export default function ClientDetailPage({ params }: ClientDetailPageProps) {
     setTimeout(() => setNoteFeedback(""), 2200);
   }
 
+  const timelineEvents = [
+    { id: "created", label: "Client cree", date: "14 Mar 2025", detail: `${client.name} a ete ajoute au CRM.` },
+    { id: "project", label: "Projet ajoute", date: client.lastContact, detail: client.projects[0] ? `Projet lie: ${client.projects[0].title}` : "Aucun projet lie pour le moment." },
+    { id: "message", label: "Message envoye", date: "Aujourd'hui", detail: "Dernier echange capture dans la messagerie." },
+    { id: "follow", label: "Suivi planifie", date: "Demain", detail: "Rappel de suivi client programme." },
+  ];
+
   return (
     <div className="flex flex-col gap-6 max-w-4xl">
       <nav className="flex items-center gap-2 text-sm text-neutral-500" style={{ animation: "reveal-up 0.7s ease-out both" }}>
@@ -176,16 +183,14 @@ export default function ClientDetailPage({ params }: ClientDetailPageProps) {
               </h2>
               <span className="text-sm text-neutral-500">{client.email}</span>
               <span
-                className={[
-                  "inline-flex self-start px-2.5 py-1 rounded-full text-xs font-medium mt-1",
-                  status.className,
-                ].join(" ")}
+                className="inline-flex self-start px-2.5 py-1 rounded-full text-xs font-medium mt-1"
+                style={status.style}
               >
                 {status.label}
               </span>
             </div>
           </div>
-          <Link href={`/dashboard/clients/${params.id}/edit`}>
+          <Link href={`/dashboard/clients?edit=${params.id}`}>
             <Button variant="outline" size="sm">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -248,10 +253,8 @@ export default function ClientDetailPage({ params }: ClientDetailPageProps) {
             <div className="flex items-center justify-between py-2 border-b border-neutral-100">
               <span className="text-sm text-neutral-500">Statut actuel</span>
               <span
-                className={[
-                  "inline-flex px-2.5 py-1 rounded-full text-xs font-medium",
-                  status.className,
-                ].join(" ")}
+                className="inline-flex px-2.5 py-1 rounded-full text-xs font-medium"
+                style={status.style}
               >
                 {status.label}
               </span>
@@ -286,10 +289,8 @@ export default function ClientDetailPage({ params }: ClientDetailPageProps) {
                     {project.title}
                   </Link>
                   <span
-                    className={[
-                      "inline-flex px-2.5 py-1 rounded-full text-xs font-medium",
-                      ps.className,
-                    ].join(" ")}
+                    className="inline-flex px-2.5 py-1 rounded-full text-xs font-medium"
+                    style={ps.style}
                   >
                     {ps.label}
                   </span>
@@ -319,6 +320,34 @@ export default function ClientDetailPage({ params }: ClientDetailPageProps) {
             {noteFeedback}
           </p>
         )}
+      </div>
+
+      <div className="bg-white rounded-2xl p-6">
+        <div className="flex items-center justify-between gap-2 mb-4">
+          <h3 className="text-sm font-medium text-neutral-900">Timeline activite client</h3>
+          <span className="inline-flex rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-700">
+            Hub CRM
+          </span>
+        </div>
+
+        <div className="flex flex-col gap-3">
+          {timelineEvents.map((event, index) => (
+            <div key={event.id} className="grid grid-cols-[auto_1fr] gap-3">
+              <div className="flex flex-col items-center">
+                <span className="mt-0.5 h-2.5 w-2.5 rounded-full bg-blue-500" />
+                {index < timelineEvents.length - 1 ? <span className="mt-1 h-full w-px bg-blue-100" /> : null}
+              </div>
+
+              <div className="rounded-xl border border-blue-100 bg-blue-50/40 px-3 py-2.5">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-sm font-semibold text-slate-900">{event.label}</p>
+                  <span className="text-[11px] font-medium text-slate-500">{event.date}</span>
+                </div>
+                <p className="mt-1 text-xs text-slate-600">{event.detail}</p>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

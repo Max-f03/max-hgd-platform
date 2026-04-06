@@ -1,0 +1,545 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/Button";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
+import { Textarea } from "@/components/ui/textarea";
+import { Bot, Cpu, Save, Plus, Trash2, Loader2, Send, Sparkles, Settings, Users, HelpCircle, MessageSquare, BarChart3, Link as LinkIcon, Edit, X, Check } from "lucide-react";
+import { toast } from "sonner";
+
+interface QuickAction {
+  label: string;
+  message: string;
+}
+
+interface ChatbotService {
+  id: string;
+  name: string;
+  description?: string;
+  priceRange?: string;
+  icon?: string;
+  order: number;
+  isActive: boolean;
+}
+
+interface SocialLink {
+  id: string;
+  platform: string;
+  url: string;
+  username?: string;
+  isActive: boolean;
+  order: number;
+}
+
+interface ChatbotFAQ {
+  id: string;
+  question: string;
+  answer: string;
+  category?: string;
+  order: number;
+  isActive: boolean;
+}
+
+interface ChatbotSettings {
+  chatbotEnabled: boolean;
+  chatbotUseAI: boolean;
+  chatbotWelcome: string;
+  chatbotPersonality: string;
+  chatbotPrimaryColor: string;
+  chatbotQuickActions: QuickAction[];
+  publicTitle?: string;
+  publicEmail?: string;
+  publicPhone?: string;
+  publicLocation?: string;
+  publicAvailability?: string;
+}
+
+const personalities = [
+  { value: "friendly", label: "Amical", description: "Ton chaleureux et accessible" },
+  { value: "professional", label: "Professionnel", description: "Ton formel et serieux" },
+  { value: "casual", label: "Decontracte", description: "Ton leger et moderne" },
+  { value: "technical", label: "Technique", description: "Ton precis et detaille" },
+];
+
+const socialPlatforms = [
+  { value: "linkedin", label: "LinkedIn" },
+  { value: "github", label: "GitHub" },
+  { value: "twitter", label: "Twitter" },
+  { value: "dribbble", label: "Dribbble" },
+  { value: "behance", label: "Behance" },
+  { value: "instagram", label: "Instagram" },
+];
+
+function withAlpha(hex: string, alpha: number): string {
+  const clean = hex.replace("#", "");
+  const safe = /^[0-9a-fA-F]{6}$/.test(clean) ? clean : "3B82F6";
+  const r = Number.parseInt(safe.slice(0, 2), 16);
+  const g = Number.parseInt(safe.slice(2, 4), 16);
+  const b = Number.parseInt(safe.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function ChatbotPreview({ settings }: { settings: ChatbotSettings }) {
+  const quickActions = settings.chatbotQuickActions
+    .filter((a) => a.label.trim().length > 0)
+    .slice(0, 3);
+
+  return (
+    <div className="sticky top-24">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4" />
+            Previsualisation live
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-[var(--ui-text-secondary)]">
+            Apercu du rendu final du chatbot avec vos reglages actuels.
+          </p>
+
+          <div
+            className="overflow-hidden rounded-2xl border"
+            style={{ borderColor: "var(--ui-border)", background: "var(--ui-card)" }}
+          >
+            <div
+              className="flex items-center justify-between px-4 py-3 text-white"
+              style={{ background: `linear-gradient(135deg, ${settings.chatbotPrimaryColor}, ${withAlpha(settings.chatbotPrimaryColor, 0.9)})` }}
+            >
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20">
+                  <Bot className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold">Assistant</p>
+                  <p className="text-[11px] text-white/80">En ligne</p>
+                </div>
+              </div>
+              <div className="h-2 w-2 rounded-full bg-emerald-300" />
+            </div>
+
+            <div className="space-y-3 p-4" style={{ background: "var(--ui-card)" }}>
+              <div className="flex justify-start">
+                <div
+                  className="max-w-[88%] rounded-2xl rounded-bl-md px-3 py-2"
+                  style={{ background: "var(--ui-input-bg)", color: "var(--ui-text)" }}
+                >
+                  <p className="text-sm leading-relaxed">{settings.chatbotWelcome || "Bonjour !"}</p>
+                </div>
+              </div>
+
+              <div className="flex justify-end">
+                <div
+                  className="max-w-[75%] rounded-2xl rounded-br-md px-3 py-2 text-white"
+                  style={{ background: settings.chatbotPrimaryColor }}
+                >
+                  <p className="text-sm leading-relaxed">Bonjour, j&apos;ai une question.</p>
+                </div>
+              </div>
+
+              {quickActions.length > 0 ? (
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {quickActions.map((action, idx) => (
+                    <span
+                      key={`${action.label}-${idx}`}
+                      className="rounded-full border px-2.5 py-1 text-xs"
+                      style={{
+                        borderColor: withAlpha(settings.chatbotPrimaryColor, 0.4),
+                        color: settings.chatbotPrimaryColor,
+                        background: withAlpha(settings.chatbotPrimaryColor, 0.08),
+                      }}
+                    >
+                      {action.label}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+
+            <div className="border-t p-3" style={{ borderColor: "var(--ui-border)", background: "var(--ui-card)" }}>
+              <div className="flex items-center gap-2">
+                <div
+                  className="h-10 flex-1 rounded-full border px-3 text-sm"
+                  style={{
+                    borderColor: "var(--ui-border)",
+                    color: "var(--ui-text-muted)",
+                    background: "var(--ui-input-bg)",
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                >
+                  Ecrivez votre message...
+                </div>
+                <div
+                  className="flex h-10 w-10 items-center justify-center rounded-full text-white"
+                  style={{ background: settings.chatbotPrimaryColor }}
+                >
+                  <Send className="h-4 w-4" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-xl border p-3 text-xs" style={{ borderColor: "var(--ui-border)", color: "var(--ui-text-secondary)", background: "var(--ui-input-bg)" }}>
+            Personnalite active: <span className="font-semibold" style={{ color: "var(--ui-text)" }}>{personalities.find((p) => p.value === settings.chatbotPersonality)?.label ?? "Amical"}</span>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+export default function ChatbotSettingsPage() {
+  const [settings, setSettings] = useState<ChatbotSettings>({
+    chatbotEnabled: true,
+    chatbotUseAI: true,
+    chatbotWelcome: "Bonjour ! Je suis l'assistant de Max. Comment puis-je vous aider ?",
+    chatbotPersonality: "friendly",
+    chatbotPrimaryColor: "#3B82F6",
+    chatbotQuickActions: [
+      { label: "Voir les projets", message: "Je voudrais voir vos projets" },
+      { label: "Services", message: "Quels services proposez-vous ?" },
+      { label: "Me contacter", message: "Je voudrais vous contacter" },
+    ],
+  });
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [aiStatus, setAiStatus] = useState<{ aiEnabled: boolean; useAI: boolean; hasApiKey: boolean; provider: string } | null>(null);
+
+  useEffect(() => {
+    void fetchSettings();
+    void fetch("/api/chatbot/status")
+      .then((r) => r.json() as Promise<{ aiEnabled: boolean; useAI: boolean; hasApiKey: boolean; provider: string }>)
+      .then(setAiStatus)
+      .catch(() => null);
+  }, []);
+
+  const fetchSettings = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch("/api/settings");
+      if (response.ok) {
+        const data = (await response.json()) as Partial<ChatbotSettings>;
+        setSettings({
+          chatbotEnabled: data.chatbotEnabled ?? true,
+          chatbotUseAI: data.chatbotUseAI ?? true,
+          chatbotWelcome:
+            data.chatbotWelcome ??
+            "Bonjour ! Je suis l'assistant de Max. Comment puis-je vous aider ?",
+          chatbotPersonality: data.chatbotPersonality ?? "friendly",
+          chatbotPrimaryColor: data.chatbotPrimaryColor ?? "#3B82F6",
+          chatbotQuickActions: data.chatbotQuickActions ?? [
+            { label: "Voir les projets", message: "Je voudrais voir vos projets" },
+            { label: "Services", message: "Quels services proposez-vous ?" },
+            { label: "Me contacter", message: "Je voudrais vous contacter" },
+          ],
+        });
+      }
+    } catch (error) {
+      console.error("Fetch settings error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const saveSettings = async () => {
+    setSaving(true);
+    try {
+      const response = await fetch("/api/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(settings),
+      });
+
+      if (response.ok) {
+        toast.success("Parametres enregistres");
+      } else {
+        toast.error("Erreur lors de la sauvegarde");
+      }
+    } catch (error) {
+      console.error("Save error:", error);
+      toast.error("Erreur lors de la sauvegarde");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const addQuickAction = () => {
+    setSettings((prev) => ({
+      ...prev,
+      chatbotQuickActions: [...prev.chatbotQuickActions, { label: "", message: "" }],
+    }));
+  };
+
+  const removeQuickAction = (index: number) => {
+    setSettings((prev) => ({
+      ...prev,
+      chatbotQuickActions: prev.chatbotQuickActions.filter((_, i) => i !== index),
+    }));
+  };
+
+  const updateQuickAction = (
+    index: number,
+    field: "label" | "message",
+    value: string
+  ) => {
+    setSettings((prev) => ({
+      ...prev,
+      chatbotQuickActions: prev.chatbotQuickActions.map((action, i) =>
+        i === index ? { ...action, [field]: value } : action
+      ),
+    }));
+  };
+
+  if (loading) {
+    return (
+      <div className="flex h-96 items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-[var(--ui-primary)]" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="mx-auto w-full max-w-[1280px] p-6">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
+        <div className="space-y-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h1 className="text-2xl font-bold" style={{ color: "var(--ui-text)" }}>Configuration Chatbot</h1>
+              <p className="mt-1" style={{ color: "var(--ui-text-secondary)" }}>
+                Personnalisez l&apos;assistant qui repond a vos visiteurs
+              </p>
+            </div>
+            <Button onClick={saveSettings} disabled={saving}>
+              {saving ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="mr-2 h-4 w-4" />
+              )}
+              Enregistrer
+            </Button>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Bot className="h-5 w-5" />
+                Activation
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium" style={{ color: "var(--ui-text)" }}>Activer le chatbot</p>
+                  <p className="text-sm" style={{ color: "var(--ui-text-secondary)" }}>
+                    Le widget apparaitra en bas a droite du site public
+                  </p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={settings.chatbotEnabled}
+                  onChange={(e) =>
+                    setSettings((prev) => ({ ...prev, chatbotEnabled: e.target.checked }))
+                  }
+                  className="h-5 w-5 cursor-pointer rounded border accent-[var(--ui-primary)]"
+                  style={{ borderColor: "var(--ui-border)" }}
+                />
+              </div>
+
+              <div className="border-t my-4" style={{ borderColor: "var(--ui-border)" }} />
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium" style={{ color: "var(--ui-text)" }}>Utiliser l&apos;IA Groq</p>
+                  <p className="text-sm" style={{ color: "var(--ui-text-secondary)" }}>
+                    Reponses intelligentes generees par IA. Si desactive, le bot utilise des reponses predefinies.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={settings.chatbotUseAI}
+                  onClick={() => setSettings((prev) => ({ ...prev, chatbotUseAI: !prev.chatbotUseAI }))}
+                  className="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none"
+                  style={{ background: settings.chatbotUseAI ? "var(--ui-primary)" : "var(--ui-border)" }}
+                >
+                  <span
+                    className="inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition duration-200"
+                    style={{ transform: settings.chatbotUseAI ? "translateX(20px)" : "translateX(0px)" }}
+                  />
+                </button>
+              </div>
+
+              <div
+                className="mt-4 flex items-center gap-2.5 rounded-lg border p-3"
+                style={{ borderColor: "var(--ui-border)", background: "var(--ui-input-bg)" }}
+              >
+                <Cpu
+                  className="h-4 w-4 shrink-0"
+                  style={{
+                    color: !settings.chatbotUseAI
+                      ? "var(--ui-text-muted)"
+                      : aiStatus?.hasApiKey
+                      ? "#22c55e"
+                      : "#eab308",
+                  }}
+                />
+                <div className="flex items-center gap-2">
+                  <div
+                    className="h-2 w-2 rounded-full"
+                    style={{
+                      background: !settings.chatbotUseAI
+                        ? "#9ca3af"
+                        : aiStatus?.hasApiKey
+                        ? "#22c55e"
+                        : "#eab308",
+                    }}
+                  />
+                  <span className="text-sm" style={{ color: "var(--ui-text-secondary)" }}>
+                    {!settings.chatbotUseAI
+                      ? "IA desactivee — reponses predefinies"
+                      : aiStatus?.hasApiKey
+                      ? `IA ${aiStatus.provider} connectee`
+                      : "Cle API manquante — reponses predefinies"}
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Apparence</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <label className="mb-2 block text-sm font-medium" style={{ color: "var(--ui-text)" }}>
+                  Couleur principale
+                </label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="color"
+                    value={settings.chatbotPrimaryColor}
+                    onChange={(e) =>
+                      setSettings((prev) => ({ ...prev, chatbotPrimaryColor: e.target.value }))
+                    }
+                    className="h-12 w-12 cursor-pointer rounded-lg border-0"
+                  />
+                  <input
+                    type="text"
+                    value={settings.chatbotPrimaryColor}
+                    onChange={(e) =>
+                      setSettings((prev) => ({ ...prev, chatbotPrimaryColor: e.target.value }))
+                    }
+                    className="h-10 w-28 rounded-lg border px-3 font-mono"
+                    style={{ borderColor: "var(--ui-border)", background: "var(--ui-input-bg)", color: "var(--ui-text)" }}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Message de bienvenue</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Textarea
+                value={settings.chatbotWelcome}
+                onChange={(e) =>
+                  setSettings((prev) => ({ ...prev, chatbotWelcome: e.target.value }))
+                }
+                placeholder="Bonjour ! Comment puis-je vous aider ?"
+                rows={3}
+              />
+              <p className="mt-2 text-sm" style={{ color: "var(--ui-text-muted)" }}>
+                Ce message s&apos;affiche quand le visiteur ouvre le chat
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Personnalite</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                {personalities.map((p) => (
+                  <button
+                    key={p.value}
+                    onClick={() =>
+                      setSettings((prev) => ({ ...prev, chatbotPersonality: p.value }))
+                    }
+                    className="rounded-lg border p-4 text-left transition-colors"
+                    style={
+                      settings.chatbotPersonality === p.value
+                        ? { borderColor: "var(--ui-primary)", background: "var(--ui-primary-soft)" }
+                        : { borderColor: "var(--ui-border)", background: "transparent" }
+                    }
+                  >
+                    <p className="font-medium" style={{ color: "var(--ui-text)" }}>{p.label}</p>
+                    <p className="text-sm" style={{ color: "var(--ui-text-secondary)" }}>{p.description}</p>
+                  </button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Actions rapides</CardTitle>
+                <Button variant="outline" size="sm" onClick={addQuickAction}>
+                  <Plus className="mr-1 h-4 w-4" />
+                  Ajouter
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {settings.chatbotQuickActions.length === 0 ? (
+                <p className="py-4 text-center" style={{ color: "var(--ui-text-muted)" }}>
+                  Aucune action rapide. Cliquez sur &quot;Ajouter&quot; pour en creer.
+                </p>
+              ) : (
+                settings.chatbotQuickActions.map((action, index) => (
+                  <div key={index} className="flex items-start gap-3">
+                    <div className="grid flex-1 grid-cols-1 gap-3 md:grid-cols-2">
+                      <Input
+                        placeholder="Label du bouton"
+                        value={action.label}
+                        onChange={(e) => updateQuickAction(index, "label", e.target.value)}
+                      />
+                      <Input
+                        placeholder="Message envoye"
+                        value={action.message}
+                        onChange={(e) => updateQuickAction(index, "message", e.target.value)}
+                      />
+                    </div>
+                    <button
+                      onClick={() => removeQuickAction(index)}
+                      className="rounded-lg p-2 text-red-500 transition-colors hover:bg-red-50"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))
+              )}
+              <p className="text-sm" style={{ color: "var(--ui-text-muted)" }}>
+                Ces boutons apparaissent au debut de la conversation pour guider le visiteur
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="hidden xl:block">
+          <ChatbotPreview settings={settings} />
+        </div>
+      </div>
+
+      <div className="mt-6 xl:hidden">
+        <ChatbotPreview settings={settings} />
+      </div>
+    </div>
+  );
+}

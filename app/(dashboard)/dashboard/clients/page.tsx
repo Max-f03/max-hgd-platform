@@ -47,7 +47,7 @@ export default function ClientsPage() {
   const [viewMode, setViewMode] = useState<ViewMode>("table");
   const [sortMode, setSortMode] = useState<SortMode>("name");
   const [selectedClientId, setSelectedClientId] = useState("");
-  const [isCreatePanelOpen, setIsCreatePanelOpen] = useState(false);
+  const [isCreatePanelOpen, setIsCreatePanelOpen] = useState(() => searchParams.get("create") === "1");
   const [lastCreatedClient, setLastCreatedClient] = useState<Client | null>(null);
 
   useEffect(() => {
@@ -81,12 +81,6 @@ export default function ClientsPage() {
     }
     void loadClients();
   }, []);
-
-  useEffect(() => {
-    if (searchParams.get("create") === "1") {
-      setIsCreatePanelOpen(true);
-    }
-  }, [searchParams]);
 
   useEffect(() => {
     if (!isCreatePanelOpen) return;
@@ -189,7 +183,7 @@ export default function ClientsPage() {
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-blue-700">Client management</p>
-            <h2 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">Base clients</h2>
+            <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">Base clients</h1>
             <p className="mt-1 text-sm text-slate-600">{clients.length} clients suivis actuellement</p>
           </div>
           <button
@@ -242,11 +236,12 @@ export default function ClientsPage() {
         ) : null}
       </div>
 
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.65fr_360px]" style={{ animation: "fadeSlideUp 520ms ease-out both" }}>
-        <div className="rounded-3xl border border-blue-100 bg-white p-4 sm:p-5">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_320px] 2xl:grid-cols-[minmax(0,1fr)_360px]" style={{ animation: "fadeSlideUp 520ms ease-out both" }}>
+        <div className="min-w-0 rounded-3xl border border-blue-100 bg-white p-4 sm:p-5">
           <div className="flex flex-wrap gap-2">
             <input
               type="text"
+              aria-label="Rechercher un client"
               placeholder="Rechercher un client..."
               value={search}
               onChange={(event) => setSearch(event.target.value)}
@@ -254,6 +249,7 @@ export default function ClientsPage() {
             />
 
             <select
+              aria-label="Filtrer les clients par statut"
               value={statusFilter}
               onChange={(event) => setStatusFilter(event.target.value as "all" | ClientStatus)}
               className="h-10 rounded-xl border border-blue-100 bg-white px-3 text-sm text-slate-700 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-500/15"
@@ -265,6 +261,7 @@ export default function ClientsPage() {
             </select>
 
             <select
+              aria-label="Trier les clients"
               value={sortMode}
               onChange={(event) => setSortMode(event.target.value as SortMode)}
               className="h-10 rounded-xl border border-blue-100 bg-white px-3 text-sm text-slate-700 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-500/15"
@@ -316,7 +313,15 @@ export default function ClientsPage() {
             </div>
           ) : viewMode === "table" ? (
             <div className="mt-4 overflow-x-auto rounded-2xl border border-blue-100">
-              <table className="w-full">
+              <table className="w-full table-fixed">
+                <colgroup>
+                  <col className="w-[200px]" />
+                  <col className="w-[220px]" />
+                  <col className="w-[130px]" />
+                  <col className="w-[90px]" />
+                  <col className="w-[80px]" />
+                  <col className="w-[130px]" />
+                </colgroup>
                 <thead>
                   <tr className="border-b border-blue-100 bg-blue-50/40">
                     {["Client", "Email", "Entreprise", "Statut", "Projets", ""].map((header) => (
@@ -340,14 +345,14 @@ export default function ClientsPage() {
                       >
                         <td className="px-4 py-3.5">
                           <div className="flex items-center gap-2.5">
-                            <div className="flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold" style={{ background: colors.bg, color: colors.text }}>
+                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold" style={{ background: colors.bg, color: colors.text }}>
                               {client.initials}
                             </div>
-                            <span className="text-sm font-semibold text-slate-900">{client.name}</span>
+                            <span className="truncate text-sm font-semibold text-slate-900" title={client.name}>{client.name}</span>
                           </div>
                         </td>
-                        <td className="px-4 py-3.5 text-sm text-slate-600">{client.email}</td>
-                        <td className="px-4 py-3.5 text-sm text-slate-600">{client.company}</td>
+                        <td className="px-4 py-3.5 text-sm text-slate-600"><span className="block truncate" title={client.email}>{client.email}</span></td>
+                        <td className="px-4 py-3.5 text-sm text-slate-600"><span className="block truncate" title={client.company}>{client.company}</span></td>
                         <td className="px-4 py-3.5">
                           <span className="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold" style={{ background: status.bg, color: status.color }}>
                             {status.label}
@@ -358,13 +363,13 @@ export default function ClientsPage() {
                         </td>
                         <td className="px-4 py-3.5">
                           <div className="flex items-center justify-end gap-1">
-                            <Link href={`/dashboard/clients/${client.id}`} className="inline-flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-blue-100 hover:text-blue-700" aria-label="Voir">
+                            <Link href={`/dashboard/clients/${client.id}`} className="inline-flex h-11 w-11 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-blue-100 hover:text-blue-700" aria-label="Voir">
                               <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
                             </Link>
-                            <Link href={`/dashboard/clients/${client.id}/edit`} className="inline-flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-blue-100 hover:text-blue-700" aria-label="Modifier">
+                            <Link href={`/dashboard/clients/${client.id}/edit`} className="inline-flex h-11 w-11 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-blue-100 hover:text-blue-700" aria-label="Modifier">
                               <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
                             </Link>
-                            <button type="button" onClick={(event) => { event.stopPropagation(); void handleDeleteClient(client.id, client.name); }} className="inline-flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600" aria-label="Supprimer">
+                            <button type="button" onClick={(event) => { event.stopPropagation(); void handleDeleteClient(client.id, client.name); }} className="inline-flex h-11 w-11 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600" aria-label="Supprimer">
                               <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6" /><path d="M14 11v6" /><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" /></svg>
                             </button>
                           </div>
@@ -423,7 +428,7 @@ export default function ClientsPage() {
             <div key={selectedClient.id} style={{ animation: "panelIn 240ms ease-out both" }}>
               <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-blue-700">Client selectionne</p>
-                <h3 className="mt-1 text-lg font-semibold tracking-tight text-slate-900">{selectedClient.name}</h3>
+                <h3 className="mt-1 break-words text-lg font-semibold tracking-tight text-slate-900">{selectedClient.name}</h3>
                 <p className="mt-1 text-xs text-slate-600">{selectedClient.company}</p>
               </div>
 
@@ -452,18 +457,22 @@ export default function ClientsPage() {
                 <button
                   type="button"
                   onClick={() => router.push(`/dashboard/projects/new?clientId=${selectedClient.id}`)}
-                  className="inline-flex h-9 items-center justify-center rounded-xl bg-blue-600 px-3 text-xs font-semibold text-white transition hover:bg-blue-700"
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600 text-white transition hover:bg-blue-700"
                   title="Nouveau projet"
+                  aria-label="Nouveau projet"
                 >
-                  Nouveau projet
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                  </svg>
                 </button>
-                <Link href={`/dashboard/clients/${selectedClient.id}`} className="inline-flex h-9 w-20 items-center justify-center rounded-xl bg-blue-600 text-white transition hover:bg-blue-700" title="Voir">
+                <Link href={`/dashboard/clients/${selectedClient.id}`} className="inline-flex h-11 w-20 items-center justify-center rounded-xl bg-blue-600 text-white transition hover:bg-blue-700" title="Voir" aria-label="Voir le client">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                     <circle cx="12" cy="12" r="3" />
                   </svg>
                 </Link>
-                <Link href={`/dashboard/clients/${selectedClient.id}/edit`} className="inline-flex h-9 w-20 items-center justify-center rounded-xl border border-blue-300 bg-white text-blue-700 transition hover:bg-blue-50" title="Modifier">
+                <Link href={`/dashboard/clients/${selectedClient.id}/edit`} className="inline-flex h-11 w-20 items-center justify-center rounded-xl border border-blue-300 bg-white text-blue-700 transition hover:bg-blue-50" title="Modifier" aria-label="Modifier le client">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
@@ -474,8 +483,8 @@ export default function ClientsPage() {
                   onClick={() => {
                     void handleDeleteClient(selectedClient.id, selectedClient.name);
                   }}
-                  className="inline-flex h-9 w-20 items-center justify-center rounded-xl border border-red-300 bg-white text-red-600 transition hover:bg-red-50"
-                  title="Supprimer"
+                  className="inline-flex h-11 w-20 items-center justify-center rounded-xl border border-red-300 bg-white text-red-600 transition hover:bg-red-50"
+                  title="Supprimer" aria-label="Supprimer le client"
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="3 6 5 6 21 6" />
@@ -526,7 +535,7 @@ export default function ClientsPage() {
             <button
               type="button"
               onClick={() => setIsCreatePanelOpen(false)}
-              className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-slate-100"
+              className="w-11 h-11 rounded-full flex items-center justify-center transition-colors hover:bg-slate-100"
               style={{ color: "#64748B" }}
               aria-label="Fermer"
             >

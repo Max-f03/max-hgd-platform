@@ -1,19 +1,28 @@
 "use client";
 
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import ProjectForm, { type ProjectFormData } from "@/components/dashboard/ProjectForm";
 
-export default function NewProjectPage() {
+function NewProjectPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const preselectedClientId = searchParams.get("clientId") ?? "";
+  const [creationMessage, setCreationMessage] = useState("");
 
   async function handleSubmit(data: ProjectFormData, action: "draft" | "publish") {
+    setCreationMessage("Creation du projet...");
     const response = await fetch("/api/projects", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        projectType: data.projectType,
+        workflow: {
+          mode: data.workflowMode,
+          templateKey: data.workflowTemplate,
+          duplicateProjectId: data.duplicateFromProjectId || undefined,
+        },
         data: {
           ...data,
           category: data.category,
@@ -23,17 +32,43 @@ export default function NewProjectPage() {
       }),
     });
 
+    const payload = (await response.json().catch(() => null)) as
+      | {
+          error?: string;
+          project?: { id?: string };
+          workflow?: { label?: string; mode?: string; createdTaskCount?: number };
+        }
+      | null;
+
     if (!response.ok) {
-      const payload = (await response.json().catch(() => null)) as { error?: string } | null;
       window.alert(payload?.error || "La creation du projet a echoue.");
+      setCreationMessage("");
       return;
     }
 
-    router.push("/dashboard/projects");
+    const projectId = payload?.project?.id;
+    if (!projectId) {
+      setCreationMessage("");
+      router.push("/dashboard/projects");
+      return;
+    }
+
+    const workflowLabel = payload?.workflow?.label ?? "workflow standard";
+    const generatedTasks = String(payload?.workflow?.createdTaskCount ?? 0);
+    setCreationMessage(`Projet cree avec workflow \"${workflowLabel}\"`);
+    router.push(
+      `/dashboard/projects/${projectId}?created=1&workflow=${encodeURIComponent(workflowLabel)}&generatedTasks=${generatedTasks}`
+    );
   }
 
   return (
     <div className="flex flex-col gap-5">
+      {creationMessage ? (
+        <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-800">
+          {creationMessage}
+        </div>
+      ) : null}
+
       <div className="rounded-[26px] border border-blue-100 bg-blue-50 p-4 sm:p-5 lg:p-6" style={{ animation: "fadeSlideUp 320ms ease-out both" }}>
         <nav className="mb-3 flex items-center gap-2 text-sm text-slate-500">
           <Link href="/dashboard/projects" className="transition-colors hover:text-slate-700">
@@ -127,5 +162,13 @@ export default function NewProjectPage() {
         }
       `}</style>
     </div>
+  );
+}
+
+export default function NewProjectPage() {
+  return (
+    <Suspense fallback={<div className="p-4 text-sm text-slate-500">Chargement du formulaire...</div>}>
+      <NewProjectPageContent />
+    </Suspense>
   );
 }

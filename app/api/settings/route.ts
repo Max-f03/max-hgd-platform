@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 
 interface AccountProfile {
   name: string;
@@ -79,6 +80,15 @@ let accountHydratedFromDb = false;
 let persistentVersioningAvailable = true;
 let fallbackVersions: SettingsVersion[] = [];
 
+interface ChatbotSettingsPayload {
+  chatbotEnabled: boolean;
+  chatbotUseAI: boolean;
+  chatbotWelcome: string;
+  chatbotPersonality: string;
+  chatbotPrimaryColor: string;
+  chatbotQuickActions: Array<{ label: string; message: string }>;
+}
+
 function cloneAccountState(state: AccountState): AccountState {
   return {
     profile: { ...state.profile },
@@ -118,7 +128,7 @@ function toSettingsVersion(row: {
     name: row.name,
     savedAt: row.createdAt.toISOString(),
     isActive: row.isActive,
-    account: cloneAccountState(row.account as AccountState),
+    account: cloneAccountState(row.account as unknown as AccountState),
     uiState: cloneUiState((row.uiState as SettingsUiSnapshot | null) ?? null),
   };
 }
@@ -133,7 +143,7 @@ async function hydrateAccountStateFromActiveVersion() {
     });
 
     if (activeVersion) {
-      accountState = cloneAccountState(activeVersion.account as AccountState);
+      accountState = cloneAccountState(activeVersion.account as unknown as AccountState);
     }
 
     // Charger l'avatar depuis User.avatar si absent de la version active
@@ -149,6 +159,64 @@ async function hydrateAccountStateFromActiveVersion() {
   } finally {
     accountHydratedFromDb = true;
   }
+}
+
+async function getFirstUserId(): Promise<string | null> {
+  const user = await prisma.user.findFirst({
+    orderBy: { createdAt: "asc" },
+    select: { id: true },
+  });
+  return user?.id ?? null;
+}
+
+function normalizeQuickActions(value: unknown): Array<{ label: string; message: string }> {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter(
+      (item): item is { label?: unknown; message?: unknown } =>
+        !!item && typeof item === "object"
+    )
+    .map((item) => ({
+      label: typeof item.label === "string" ? item.label : "",
+      message: typeof item.message === "string" ? item.message : "",
+    }))
+    .filter((item) => item.label.trim().length > 0 || item.message.trim().length > 0);
+}
+
+async function getChatbotSettingsSnapshot(): Promise<ChatbotSettingsPayload> {
+  const firstUserId = await getFirstUserId();
+  if (!firstUserId) {
+    return {
+      chatbotEnabled: true,
+      chatbotWelcome: "Bonjour ! Je suis l'assistant de Max. Comment puis-je vous aider ?",
+      chatbotPersonality: "friendly",
+      chatbotPrimaryColor: "#3B82F6",
+      chatbotQuickActions: [],
+    };
+  }
+
+  const settings = await prisma.settings.findUnique({
+    where: { userId: firstUserId },
+    select: {
+      chatbotEnabled: true,
+      chatbotUseAI: true,
+      chatbotWelcome: true,
+      chatbotPersonality: true,
+      chatbotPrimaryColor: true,
+      chatbotQuickActions: true,
+    },
+  });
+
+  return {
+    chatbotEnabled: settings?.chatbotEnabled ?? true,
+    chatbotUseAI: settings?.chatbotUseAI ?? true,
+    chatbotWelcome:
+      settings?.chatbotWelcome ??
+      "Bonjour ! Je suis l'assistant de Max. Comment puis-je vous aider ?",
+    chatbotPersonality: settings?.chatbotPersonality ?? "friendly",
+    chatbotPrimaryColor: settings?.chatbotPrimaryColor ?? "#3B82F6",
+    chatbotQuickActions: normalizeQuickActions(settings?.chatbotQuickActions),
+  };
 }
 
 async function readVersionsFromDb(): Promise<SettingsVersion[]> {
@@ -222,7 +290,106 @@ export async function GET(request: Request) {
     });
   }
 
-  return NextResponse.json({ account: accountState });
+  const chatbot = await getChatbotSettingsSnapshot();
+  return NextResponse.json({ account: accountState, ...chatbot });
+}
+
+export async function PUT(request: Request) {
+  try {
+    const body = (await request.json()) as Partial<ChatbotSettingsPayload>;
+    const {
+      chatbotEnabled,
+      chatbotUseAI,
+      chatbotWelcome,
+      chatbotPersonality,
+      chatbotPrimaryColor,
+      chatbotQuickActions,
+      ...otherFields
+    } = body;
+
+    const firstUserId = await getFirstUserId();
+    if (!firstUserId) {
+      return NextResponse.json({ error: "Aucun utilisateur disponible." }, { status: 400 });
+    }
+
+    const payload = {
+      ...otherFields,
+      chatbotEnabled: chatbotEnabled ?? true,
+      chatbotUseAI: chatbotUseAI ?? true,
+      chatbotWelcome:
+        chatbotWelcome ??
+        "Bonjour ! Je suis l'assistant de Max. Comment puis-je vous aider ?",
+      chatbotPersonality: chatbotPersonality ?? "friendly",
+      chatbotPrimaryColor: chatbotPrimaryColor ?? "#3B82F6",
+      chatbotQuickActions: normalizeQuickActions(chatbotQuickActions),
+    };
+
+    await prisma.settings.upsert({
+      where: { userId: firstUserId },
+      update: payload,
+      create: {
+        userId: firstUserId,
+        ...payload,
+      },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch {
+    return NextResponse.json({ error: "Requete invalide." }, { status: 400 });
+  }
+}
+
+export async function PATCH(request: Request) {
+  try {
+    const body = (await request.json()) as Partial<ChatbotSettingsPayload>;
+
+    const firstUserId = await getFirstUserId();
+    if (!firstUserId) {
+      return NextResponse.json({ error: "Aucun utilisateur disponible." }, { status: 400 });
+    }
+
+    const update: {
+      chatbotEnabled?: boolean;
+      chatbotUseAI?: boolean;
+      chatbotWelcome?: string;
+      chatbotPersonality?: string;
+      chatbotPrimaryColor?: string;
+      chatbotQuickActions?: Array<{ label: string; message: string }>;
+    } = {};
+
+    if (body.chatbotEnabled !== undefined) update.chatbotEnabled = body.chatbotEnabled;
+    if (body.chatbotUseAI !== undefined) update.chatbotUseAI = body.chatbotUseAI;
+    if (body.chatbotWelcome !== undefined) update.chatbotWelcome = body.chatbotWelcome;
+    if (body.chatbotPersonality !== undefined) update.chatbotPersonality = body.chatbotPersonality;
+    if (body.chatbotPrimaryColor !== undefined) update.chatbotPrimaryColor = body.chatbotPrimaryColor;
+    if (body.chatbotQuickActions !== undefined) {
+      update.chatbotQuickActions = normalizeQuickActions(body.chatbotQuickActions);
+    }
+
+    if (Object.keys(update).length === 0) {
+      return NextResponse.json({ error: "Aucun champ a mettre a jour." }, { status: 400 });
+    }
+
+    await prisma.settings.upsert({
+      where: { userId: firstUserId },
+      update,
+      create: {
+        userId: firstUserId,
+        chatbotEnabled: update.chatbotEnabled ?? true,
+        chatbotUseAI: update.chatbotUseAI ?? true,
+        chatbotWelcome:
+          update.chatbotWelcome ??
+          "Bonjour ! Je suis l'assistant de Max. Comment puis-je vous aider ?",
+        chatbotPersonality: update.chatbotPersonality ?? "friendly",
+        chatbotPrimaryColor: update.chatbotPrimaryColor ?? "#3B82F6",
+        chatbotQuickActions: update.chatbotQuickActions ?? [],
+      },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch {
+    return NextResponse.json({ error: "Requete invalide." }, { status: 400 });
+  }
 }
 
 export async function POST(request: Request) {
@@ -357,8 +524,8 @@ export async function POST(request: Request) {
           data: {
             name: versionName,
             isActive: shouldMarkActive,
-            account: cloneAccountState(accountState),
-            uiState: cloneUiState(body.uiState ?? null),
+            account: cloneAccountState(accountState) as unknown as Prisma.InputJsonValue,
+            uiState: cloneUiState(body.uiState ?? null) as unknown as Prisma.InputJsonValue,
           },
         });
 
@@ -409,7 +576,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Version introuvable." }, { status: 404 });
       }
 
-      accountState = cloneAccountState(selectedVersion.account as AccountState);
+      accountState = cloneAccountState(selectedVersion.account as unknown as AccountState);
 
       await prisma.$transaction([
         prisma.adminVersionHistory.updateMany({ data: { isActive: false } }),

@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls e:/max-hgd-platform/*.ts)",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('Next.js:', d['dependencies'].get\\('next', 'N/A'\\)\\); print\\('React:', d['dependencies'].get\\('react', 'N/A'\\)\\)\")",
+      "Bash(node -e \"const d=require\\('e:/max-hgd-platform/package.json'\\); console.log\\('Next.js:', d.dependencies?.next\\); console.log\\('React:', d.dependencies?.react\\)\")",
+      "Bash(node -e \"require\\('lightningcss-win32-x64-msvc'\\)\")",
+      "Bash(powershell.exe -Command \"Start-Process powershell -Verb RunAs -Wait -ArgumentList '-Command', 'cmd /c rd /s /q E:\\\\\\\\max-hgd-platform\\\\\\\\node_modules\\\\\\\\lightningcss-win32-x64-msvc; exit'\")",
+      "Bash(node -e \"require\\('@next/swc-win32-x64-msvc'\\)\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000)",
+      "Bash(grep -Pn '`r`n' \"/e/max-hgd-platform/app/\\(dashboard\\)/dashboard/clients/page.tsx\")"
+    ]
+  }
+}

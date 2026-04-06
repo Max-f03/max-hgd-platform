@@ -23,18 +23,18 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantClasses: Record<Variant, string> = {
   primary:
-    "bg-primary-500 hover:bg-primary-600 text-white rounded-full border border-transparent",
+    "bg-[var(--ui-primary)] hover:bg-[var(--ui-primary-hover)] text-white rounded-full border border-transparent",
   default:
-    "bg-primary-500 hover:bg-primary-600 text-white rounded-full border border-transparent",
+    "bg-[var(--ui-primary)] hover:bg-[var(--ui-primary-hover)] text-white rounded-full border border-transparent",
   secondary:
-    "bg-neutral-100 hover:bg-neutral-200 text-neutral-900 rounded-full border border-transparent",
+    "bg-[var(--d-input)] hover:bg-[var(--ui-primary-soft)] text-[var(--ui-text)] rounded-full border border-transparent",
   outline:
-    "bg-transparent hover:bg-neutral-100 text-neutral-900 rounded-full border border-neutral-300",
+    "bg-transparent hover:bg-[var(--ui-primary-soft)] text-[var(--ui-text)] rounded-full border border-[var(--ui-border)]",
   ghost:
-    "bg-transparent hover:bg-neutral-100 text-neutral-700 rounded-full border border-transparent",
+    "bg-transparent hover:bg-[var(--ui-primary-soft)] text-[var(--ui-text-secondary)] rounded-full border border-transparent",
   destructive:
     "bg-red-600 hover:bg-red-700 text-white rounded-full border border-transparent",
-  link: "bg-transparent text-primary-500 underline-offset-4 hover:underline rounded-none border-transparent",
+  link: "bg-transparent text-[var(--ui-primary)] underline-offset-4 hover:underline rounded-none border-transparent",
 };
 
 const sizeClasses: Record<Size, string> = {

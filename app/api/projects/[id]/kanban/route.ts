@@ -14,7 +14,7 @@ const db = prisma as unknown as {
       include: {
         tasks: {
           orderBy: Array<{ position: "asc" } | { createdAt: "asc" }>
-          include: { deliverable: true }
+          include: { deliverable: true; attachments: true }
         }
       }
     }) => Promise<unknown[]>
@@ -25,6 +25,8 @@ const STAGE_STATUS_MAP: Record<string, string> = {
   backlog: "todo",
   todo: "todo",
   in_progress: "in_progress",
+  review: "review",
+  testing: "review",
   client_review: "review",
   validated: "done",
   done: "done",
@@ -56,6 +58,16 @@ type KanbanTx = {
   }
   projectDeliverable: {
     upsert: (args: Record<string, unknown>) => Promise<unknown>
+  }
+}
+
+type CreateTaskTx = {
+  projectStage: {
+    findFirst: (args: Record<string, unknown>) => Promise<{ id: string; key: string } | null>
+  }
+  projectTask: {
+    findFirst: (args: Record<string, unknown>) => Promise<{ position: number } | null>
+    create: (args: Record<string, unknown>) => Promise<unknown>
   }
 }
 
@@ -104,7 +116,7 @@ export async function GET(
       include: {
         tasks: {
           orderBy: [{ position: "asc" }, { createdAt: "asc" }],
-          include: { deliverable: true },
+          include: { deliverable: true, attachments: true },
         },
       },
     })
@@ -125,14 +137,15 @@ export async function GET(
         include: {
           tasks: {
             orderBy: [{ position: "asc" }, { createdAt: "asc" }],
-            include: { deliverable: true },
+            include: { deliverable: true, attachments: true },
           },
         },
       })
     }
 
     return NextResponse.json({ stages, projectTitle: project.title })
-  } catch {
+  } catch (error) {
+    console.error("[kanban:get]", error)
     return NextResponse.json(
       { error: "Impossible de charger le kanban du projet." },
       { status: 400 }
@@ -287,6 +300,81 @@ export async function PATCH(
   } catch {
     return NextResponse.json(
       { error: "Impossible de deplacer la tache." },
+      { status: 400 }
+    )
+  }
+}
+
+export async function POST(
+  request: Request,
+  context: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id: projectId } = await context.params
+    const actorUserId = await resolveActorUserId()
+
+    const project = await prisma.project.findUnique({
+      where: { id: projectId },
+      select: { id: true, userId: true },
+    })
+
+    if (!project) {
+      return NextResponse.json({ error: "Projet introuvable." }, { status: 404 })
+    }
+
+    const body = (await request.json()) as {
+      stageId?: string
+      title?: string
+      type?: "task" | "milestone" | "deliverable"
+      description?: string
+    }
+
+    if (!body.stageId || !body.title?.trim()) {
+      return NextResponse.json(
+        { error: "stageId et title sont requis." },
+        { status: 400 }
+      )
+    }
+
+    const normalizedTitle = body.title.trim()
+
+    const createdTask = await prisma.$transaction(async (tx) => {
+      const trx = tx as unknown as CreateTaskTx
+
+      const stage = await trx.projectStage.findFirst({
+        where: { id: body.stageId, projectId, userId: project.userId },
+      })
+
+      if (!stage) {
+        throw new Error("Colonne introuvable.")
+      }
+
+      const lastTask = await trx.projectTask.findFirst({
+        where: { stageId: stage.id },
+        orderBy: { position: "desc" },
+        select: { position: true },
+      })
+
+      const status = STAGE_STATUS_MAP[stage.key] ?? "todo"
+
+      return trx.projectTask.create({
+        data: {
+          title: normalizedTitle,
+          description: body.description?.trim() || null,
+          type: body.type ?? "task",
+          status,
+          position: (lastTask?.position ?? -1) + 1,
+          projectId,
+          stageId: stage.id,
+          userId: actorUserId,
+        },
+      })
+    })
+
+    return NextResponse.json({ task: createdTask }, { status: 201 })
+  } catch {
+    return NextResponse.json(
+      { error: "Impossible de creer la tache." },
       { status: 400 }
     )
   }

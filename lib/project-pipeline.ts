@@ -1,24 +1,88 @@
 import type { Prisma } from "@prisma/client"
 
-const DEFAULT_STAGE_TEMPLATES = [
-  { key: "backlog", name: "Backlog", color: "#93C5FD" },
-  { key: "todo", name: "A faire", color: "#60A5FA" },
-  { key: "in_progress", name: "En cours", color: "#3B82F6" },
-  { key: "client_review", name: "En review client", color: "#2563EB" },
-  { key: "validated", name: "Valide", color: "#1D4ED8" },
-  { key: "done", name: "Termine", color: "#1E40AF" },
-] as const
+type WorkflowMode = "template" | "empty" | "duplicate"
+type WorkflowTemplateKey = "site-web" | "branding" | "app-mobile" | "design-ui"
 
-const DEFAULT_TASK_TEMPLATES = [
-  { title: "Cadrage projet", type: "milestone", stageKey: "todo", daysOffset: 2, position: 1 },
-  { title: "Wireframes et parcours", type: "task", stageKey: "todo", daysOffset: 5, position: 2 },
-  { title: "Design UI complet", type: "task", stageKey: "todo", daysOffset: 9, position: 3 },
-  { title: "Developpement principal", type: "task", stageKey: "backlog", daysOffset: 14, position: 4 },
-  { title: "QA et recettes", type: "task", stageKey: "backlog", daysOffset: 18, position: 5 },
-  { title: "Livrable client final", type: "deliverable", stageKey: "backlog", daysOffset: 21, position: 6 },
-] as const
+type StageTemplate = { key: string; name: string; color?: string }
+type TaskTemplate = {
+  title: string
+  type: "task" | "milestone" | "deliverable"
+  stageKey: string
+  daysOffset: number
+  position: number
+}
+
+type PipelineTemplate = {
+  label: string
+  stages: StageTemplate[]
+  tasks: TaskTemplate[]
+}
+
+const EMPTY_BOARD_STAGES: StageTemplate[] = [
+  { key: "todo", name: "A faire", color: "#60A5FA" },
+  { key: "in_progress", name: "Developpement", color: "#3B82F6" },
+  { key: "testing", name: "Test", color: "#2563EB" },
+  { key: "done", name: "Termine", color: "#1E40AF" },
+]
+
+const WORKFLOW_TEMPLATES: Record<WorkflowTemplateKey, PipelineTemplate> = {
+  "site-web": {
+    label: "Site web",
+    stages: EMPTY_BOARD_STAGES,
+    tasks: [
+      { title: "Wireframe", type: "milestone", stageKey: "todo", daysOffset: 2, position: 1 },
+      { title: "UI Design", type: "task", stageKey: "todo", daysOffset: 5, position: 2 },
+      { title: "Integration", type: "task", stageKey: "in_progress", daysOffset: 10, position: 3 },
+      { title: "Responsive", type: "task", stageKey: "in_progress", daysOffset: 12, position: 4 },
+      { title: "SEO", type: "deliverable", stageKey: "testing", daysOffset: 16, position: 5 },
+    ],
+  },
+  branding: {
+    label: "Branding",
+    stages: EMPTY_BOARD_STAGES,
+    tasks: [
+      { title: "Atelier de recherche", type: "milestone", stageKey: "todo", daysOffset: 2, position: 1 },
+      { title: "Direction artistique", type: "task", stageKey: "todo", daysOffset: 4, position: 2 },
+      { title: "Creation logo", type: "task", stageKey: "in_progress", daysOffset: 8, position: 3 },
+      { title: "Declinaisons", type: "task", stageKey: "in_progress", daysOffset: 12, position: 4 },
+      { title: "Kit de livraison", type: "deliverable", stageKey: "testing", daysOffset: 15, position: 5 },
+    ],
+  },
+  "app-mobile": {
+    label: "App mobile",
+    stages: EMPTY_BOARD_STAGES,
+    tasks: [
+      { title: "User flow mobile", type: "milestone", stageKey: "todo", daysOffset: 2, position: 1 },
+      { title: "Design system mobile", type: "task", stageKey: "todo", daysOffset: 5, position: 2 },
+      { title: "Developpement ecrans", type: "task", stageKey: "in_progress", daysOffset: 10, position: 3 },
+      { title: "Tests devices", type: "task", stageKey: "testing", daysOffset: 14, position: 4 },
+      { title: "Store package", type: "deliverable", stageKey: "testing", daysOffset: 18, position: 5 },
+    ],
+  },
+  "design-ui": {
+    label: "Design UI",
+    stages: EMPTY_BOARD_STAGES,
+    tasks: [
+      { title: "Moodboard", type: "milestone", stageKey: "todo", daysOffset: 2, position: 1 },
+      { title: "Composants principaux", type: "task", stageKey: "todo", daysOffset: 4, position: 2 },
+      { title: "Ecrans cles", type: "task", stageKey: "in_progress", daysOffset: 8, position: 3 },
+      { title: "Prototype interactif", type: "task", stageKey: "testing", daysOffset: 11, position: 4 },
+      { title: "Handoff", type: "deliverable", stageKey: "testing", daysOffset: 13, position: 5 },
+    ],
+  },
+}
+
+const DEFAULT_TEMPLATE_KEY: WorkflowTemplateKey = "site-web"
 
 type TxClient = Prisma.TransactionClient
+
+type PipelineGenerationResult = {
+  mode: WorkflowMode
+  templateKey: string
+  label: string
+  createdStageCount: number
+  createdTaskCount: number
+}
 
 function addDays(baseDate: Date, days: number): Date {
   const nextDate = new Date(baseDate)
@@ -32,11 +96,44 @@ export async function createDefaultPipelineForProject(
     projectId: string
     userId: string
     baselineDate?: Date
+    workflow?: {
+      mode?: WorkflowMode
+      templateKey?: string
+      duplicateProjectId?: string
+    }
   }
 ) {
   const baselineDate = params.baselineDate ?? new Date()
+  const workflowMode: WorkflowMode = params.workflow?.mode ?? "template"
+  const incomingTemplate = params.workflow?.templateKey as WorkflowTemplateKey | undefined
+  const templateKey = incomingTemplate && WORKFLOW_TEMPLATES[incomingTemplate] ? incomingTemplate : DEFAULT_TEMPLATE_KEY
+
   const db = tx as unknown as {
     projectStage?: {
+      findMany?: (args: {
+        where: { projectId: string; userId: string }
+        orderBy: { position: "asc" }
+        include?: {
+          tasks: {
+            orderBy: Array<{ position: "asc" } | { createdAt: "asc" }>
+          }
+        }
+      }) => Promise<
+        Array<{
+          id: string
+          key: string
+          name: string
+          color?: string | null
+          position: number
+          tasks?: Array<{
+            title: string
+            type: string
+            status: string
+            dueDate: Date | null
+            position: number
+          }>
+        }>
+      >
       create: (args: {
         data: {
           key: string
@@ -49,6 +146,10 @@ export async function createDefaultPipelineForProject(
       }) => Promise<{ id: string; key: string }>
     }
     projectTask?: {
+      findMany?: (args: {
+        where: { projectId: string; userId: string }
+        orderBy: Array<{ position: "asc" } | { createdAt: "asc" }>
+      }) => Promise<Array<{ id: string; stageId: string; title: string; type: string; status: string; dueDate: Date | null; position: number }>>
       create: (args: {
         data: {
           title: string
@@ -70,15 +171,92 @@ export async function createDefaultPipelineForProject(
   }
 
   if (!db.projectStage) {
-    return
+    return {
+      mode: workflowMode,
+      templateKey,
+      label: "Kanban",
+      createdStageCount: 0,
+      createdTaskCount: 0,
+    } satisfies PipelineGenerationResult
   }
 
   const projectStageRepo = db.projectStage
   const projectTaskRepo = db.projectTask
   const projectDeliverableRepo = db.projectDeliverable
 
+  const selectedTemplate = WORKFLOW_TEMPLATES[templateKey]
+  const selectedStages = workflowMode === "empty" ? EMPTY_BOARD_STAGES : selectedTemplate.stages
+  const selectedTasks = workflowMode === "template" ? selectedTemplate.tasks : []
+
+  if (
+    workflowMode === "duplicate" &&
+    params.workflow?.duplicateProjectId &&
+    projectStageRepo.findMany &&
+    projectTaskRepo?.findMany
+  ) {
+    const sourceStages = await projectStageRepo.findMany({
+      where: { projectId: params.workflow.duplicateProjectId, userId: params.userId },
+      orderBy: { position: "asc" },
+      include: {
+        tasks: {
+          orderBy: [{ position: "asc" }, { createdAt: "asc" }],
+        },
+      },
+    })
+
+    if (sourceStages.length > 0) {
+      let createdTaskCount = 0
+      const duplicatedStages = await Promise.all(
+        sourceStages.map((stage, index) =>
+          projectStageRepo.create({
+            data: {
+              key: stage.key,
+              name: stage.name,
+              color: stage.color ?? undefined,
+              position: index,
+              projectId: params.projectId,
+              userId: params.userId,
+            },
+          })
+        )
+      )
+
+      if (projectTaskRepo) {
+        const targetStageByKey = new Map(duplicatedStages.map((stage) => [stage.key, stage.id]))
+        for (const sourceStage of sourceStages) {
+          const nextStageId = targetStageByKey.get(sourceStage.key)
+          if (!nextStageId) continue
+
+          for (const sourceTask of sourceStage.tasks ?? []) {
+            await projectTaskRepo.create({
+              data: {
+                title: sourceTask.title,
+                type: sourceTask.type,
+                status: sourceTask.status,
+                dueDate: sourceTask.dueDate ?? addDays(baselineDate, 7),
+                position: sourceTask.position,
+                projectId: params.projectId,
+                stageId: nextStageId,
+                userId: params.userId,
+              },
+            })
+            createdTaskCount += 1
+          }
+        }
+      }
+
+      return {
+        mode: "duplicate",
+        templateKey: "duplicate",
+        label: "Copie d'un projet existant",
+        createdStageCount: duplicatedStages.length,
+        createdTaskCount,
+      } satisfies PipelineGenerationResult
+    }
+  }
+
   const stages = await Promise.all(
-    DEFAULT_STAGE_TEMPLATES.map((stage, index) =>
+    selectedStages.map((stage, index) =>
       projectStageRepo.create({
         data: {
           key: stage.key,
@@ -98,10 +276,16 @@ export async function createDefaultPipelineForProject(
 
   // If task delegate is unavailable in the current runtime, keep stages only.
   if (!projectTaskRepo) {
-    return
+    return {
+      mode: workflowMode,
+      templateKey,
+      label: workflowMode === "empty" ? "Kanban vide" : selectedTemplate.label,
+      createdStageCount: stages.length,
+      createdTaskCount: 0,
+    } satisfies PipelineGenerationResult
   }
 
-  for (const taskTemplate of DEFAULT_TASK_TEMPLATES) {
+  for (const taskTemplate of selectedTasks) {
     const stageId = stageIdByKey.get(taskTemplate.stageKey)
     if (!stageId) continue
 
@@ -128,6 +312,14 @@ export async function createDefaultPipelineForProject(
       })
     }
   }
+
+  return {
+    mode: workflowMode,
+    templateKey,
+    label: workflowMode === "empty" ? "Kanban vide" : selectedTemplate.label,
+    createdStageCount: stages.length,
+    createdTaskCount: selectedTasks.length,
+  } satisfies PipelineGenerationResult
 }
 
 export async function syncProjectStatusFromPipeline(

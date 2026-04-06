@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import Input from "@/components/ui/Input";
@@ -12,6 +12,8 @@ import DatePicker from "@/components/dashboard/DatePicker";
 import Link from "next/link";
 
 export type ProjectStatus = "draft" | "published" | "completed" | "archived";
+export type WorkflowMode = "template" | "empty" | "duplicate";
+export type WorkflowTemplate = "site-web" | "branding" | "app-mobile" | "design-ui";
 
 export interface ProjectFormData {
   title: string;
@@ -39,6 +41,10 @@ export interface ProjectFormData {
   openGraphImage: UploadImageItem | null;
   publicationDate: string;
   displayOrder: number;
+  projectType: string;
+  workflowMode: WorkflowMode;
+  workflowTemplate: WorkflowTemplate;
+  duplicateFromProjectId: string;
 }
 
 interface ProjectFormProps {
@@ -51,19 +57,43 @@ interface ProjectFormProps {
 interface FormErrors {
   title?: string;
   shortDescription?: string;
-  category?: string;
+  projectType?: string;
   clientId?: string;
+  workflowMode?: string;
+  duplicateFromProjectId?: string;
   coverImage?: string;
   seoTitle?: string;
   seoDescription?: string;
 }
 
-const CATEGORY_OPTIONS = [
-  { value: "ux-ui", label: "UX/UI Design" },
-  { value: "frontend", label: "Frontend Development" },
-  { value: "branding", label: "Branding" },
-  { value: "other", label: "Autre" },
+type AutosaveStatus = "idle" | "saving" | "saved" | "error";
+
+const PROJECT_FORM_STEPS = [
+  { id: 1, label: "Infos" },
+  { id: 2, label: "Contenu" },
+  { id: 3, label: "Medias" },
+  { id: 4, label: "Publication" },
+] as const;
+
+const PROJECT_TYPE_OPTIONS = [
+  { value: "web-site", label: "Site web", category: "frontend" },
+  { value: "branding", label: "Branding", category: "branding" },
+  { value: "app-mobile", label: "App mobile", category: "frontend" },
+  { value: "design-ui", label: "Design UI", category: "ux-ui" },
 ];
+
+const WORKFLOW_MODE_OPTIONS = [
+  { value: "template", label: "Template automatique", description: "Genere des colonnes et des taches" },
+  { value: "empty", label: "Kanban vide", description: "Colonnes pretes, aucune tache" },
+  { value: "duplicate", label: "Dupliquer un projet", description: "Copie le board d'un projet existant" },
+] as const;
+
+const WORKFLOW_TEMPLATE_OPTIONS = [
+  { value: "site-web", label: "Site web" },
+  { value: "branding", label: "Branding" },
+  { value: "app-mobile", label: "App mobile" },
+  { value: "design-ui", label: "Design UI" },
+] as const;
 
 const STATUS_OPTIONS = [
   { value: "draft", label: "Brouillon" },
@@ -99,12 +129,22 @@ function slugify(value: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
+function getDefaultTemplateForProjectType(projectType: string): WorkflowTemplate {
+  const match = WORKFLOW_TEMPLATE_OPTIONS.find((item) => item.value === projectType);
+  return (match?.value ?? "site-web") as WorkflowTemplate;
+}
+
+function getCategoryForProjectType(projectType: string): string {
+  return PROJECT_TYPE_OPTIONS.find((item) => item.value === projectType)?.category ?? "other";
+}
+
 function createInitialForm(initialData?: Partial<ProjectFormData>): ProjectFormData {
+  const initialProjectType = initialData?.projectType ?? "web-site";
   return {
     title: initialData?.title ?? "",
     slug: initialData?.slug ?? "",
     shortDescription: initialData?.shortDescription ?? "",
-    category: initialData?.category ?? "",
+    category: initialData?.category ?? getCategoryForProjectType(initialProjectType),
     clientId: initialData?.clientId ?? "",
     status: initialData?.status ?? "draft",
     featured: initialData?.featured ?? false,
@@ -126,6 +166,10 @@ function createInitialForm(initialData?: Partial<ProjectFormData>): ProjectFormD
     openGraphImage: initialData?.openGraphImage ?? null,
     publicationDate: initialData?.publicationDate ?? "",
     displayOrder: initialData?.displayOrder ?? 0,
+    projectType: initialProjectType,
+    workflowMode: initialData?.workflowMode ?? "template",
+    workflowTemplate: initialData?.workflowTemplate ?? "site-web",
+    duplicateFromProjectId: initialData?.duplicateFromProjectId ?? "",
   };
 }
 
@@ -173,30 +217,111 @@ function RequiredLabel({ children }: { children: React.ReactNode }) {
 export default function ProjectForm({ initialData, formKey = "new", onSubmit, onCancel }: ProjectFormProps) {
   const [form, setForm] = useState<ProjectFormData>(() => createInitialForm(initialData));
   const [errors, setErrors] = useState<FormErrors>({});
-  const [clients, setClients] = useState<Array<{ value: string; label: string }>>([{ value: "", label: "Aucun" }]);
+  const [clients, setClients] = useState<Array<{ id: string; name: string; email: string }>>([]);
+  const [projects, setProjects] = useState<Array<{ value: string; label: string }>>([]);
+  const [clientSearch, setClientSearch] = useState("");
+  const [duplicateSearch, setDuplicateSearch] = useState("");
+  const [newClientName, setNewClientName] = useState("");
+  const [newClientEmail, setNewClientEmail] = useState("");
+  const [creatingClient, setCreatingClient] = useState(false);
+  const [loadingProjects, setLoadingProjects] = useState(false);
+  const [clientDropdownOpen, setClientDropdownOpen] = useState(false);
+  const [duplicateDropdownOpen, setDuplicateDropdownOpen] = useState(false);
+  const [newlyCreatedClientId, setNewlyCreatedClientId] = useState("");
   const [slugEdited, setSlugEdited] = useState(Boolean(initialData?.slug));
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
+  const [showPreview, setShowPreview] = useState(false);
   const [seoOpen, setSeoOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [autosaveInfo, setAutosaveInfo] = useState("Auto-save inactif");
+  const [autosaveStatus, setAutosaveStatus] = useState<AutosaveStatus>("idle");
   const [isDirty, setIsDirty] = useState(false);
+  const clientComboboxRef = useRef<HTMLDivElement>(null);
+  const duplicateComboboxRef = useRef<HTMLDivElement>(null);
 
   const storageKey = useMemo(() => `project-form-autosave-${formKey}`, [formKey]);
 
+  async function loadClients() {
+    try {
+      const response = await fetch("/api/clients?includeAll=1", { cache: "no-store" });
+      if (!response.ok) return;
+      const data = (await response.json()) as {
+        clients?: Array<{ id: string; name: string; email: string }>;
+      };
+      if (!data.clients) return;
+      setClients(data.clients);
+    } catch {
+      // Keep current client cache when API is unavailable.
+    }
+  }
+
+  async function loadProjects() {
+    try {
+      setLoadingProjects(true);
+      const response = await fetch("/api/projects", { cache: "no-store" });
+      if (!response.ok) return;
+      const data = (await response.json()) as { projects?: Array<{ id: string; title: string }> };
+      if (!data.projects) return;
+      const uniqueProjects = Array.from(
+        new Map(data.projects.map((project) => [project.id, project])).values()
+      );
+      setProjects(uniqueProjects.map((project) => ({ value: project.id, label: project.title })));
+    } catch {
+      // Keep duplicate selector cache when API is unavailable.
+    } finally {
+      setLoadingProjects(false);
+    }
+  }
+
   useEffect(() => {
-    async function loadClients() {
-      try {
-        const response = await fetch("/api/clients?includeAll=1", { cache: "no-store" });
-        if (!response.ok) return;
-        const data = (await response.json()) as { clients?: Array<{ id: string; name: string }> };
-        if (!data.clients) return;
-        const options = data.clients.map((client) => ({ value: client.id, label: client.name }));
-        setClients([{ value: "", label: "Aucun" }, ...options]);
-      } catch {
-        // Keep default empty option when API is unavailable.
+    void loadClients();
+    void loadProjects();
+  }, []);
+
+  useEffect(() => {
+    const selectedClient = clients.find((client) => client.id === form.clientId);
+    if (selectedClient) {
+      setClientSearch(selectedClient.name);
+    }
+  }, [clients, form.clientId]);
+
+  useEffect(() => {
+    const selectedProject = projects.find((project) => project.value === form.duplicateFromProjectId);
+    if (selectedProject) {
+      setDuplicateSearch(selectedProject.label);
+    }
+  }, [projects, form.duplicateFromProjectId]);
+
+  useEffect(() => {
+    function handleOutsideClick(event: MouseEvent) {
+      if (
+        clientComboboxRef.current &&
+        !clientComboboxRef.current.contains(event.target as Node)
+      ) {
+        setClientDropdownOpen(false);
+      }
+
+      if (
+        duplicateComboboxRef.current &&
+        !duplicateComboboxRef.current.contains(event.target as Node)
+      ) {
+        setDuplicateDropdownOpen(false);
       }
     }
-    void loadClients();
+
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
   }, []);
+
+  useEffect(() => {
+    if (!duplicateDropdownOpen || form.workflowMode !== "duplicate") return;
+
+    const timer = window.setInterval(() => {
+      void loadProjects();
+    }, 5000);
+
+    return () => window.clearInterval(timer);
+  }, [duplicateDropdownOpen, form.workflowMode]);
 
   useEffect(() => {
     if (initialData) return;
@@ -212,14 +337,24 @@ export default function ProjectForm({ initialData, formKey = "new", onSubmit, on
   }, [initialData, storageKey]);
 
   useEffect(() => {
-    const timer = window.setInterval(() => {
-      if (!isDirty) return;
-      localStorage.setItem(storageKey, JSON.stringify(form));
-      const now = new Date();
-      setAutosaveInfo(`Auto-save: ${now.toLocaleTimeString("fr-FR")}`);
-    }, 30000);
+    if (!isDirty) return;
 
-    return () => window.clearInterval(timer);
+    setAutosaveStatus("saving");
+    setAutosaveInfo("Saving...");
+
+    const timer = window.setTimeout(() => {
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(form));
+        const now = new Date();
+        setAutosaveStatus("saved");
+        setAutosaveInfo(`Saved ${now.toLocaleTimeString("fr-FR")}`);
+      } catch {
+        setAutosaveStatus("error");
+        setAutosaveInfo("Save failed");
+      }
+    }, 800);
+
+    return () => window.clearTimeout(timer);
   }, [form, isDirty, storageKey]);
 
   function patchForm<K extends keyof ProjectFormData>(key: K, value: ProjectFormData[K]) {
@@ -231,6 +366,69 @@ export default function ProjectForm({ initialData, formKey = "new", onSubmit, on
     patchForm("title", title);
     if (!slugEdited) {
       patchForm("slug", slugify(title));
+    }
+  }
+
+  function onProjectTypeChange(projectType: string) {
+    const category = getCategoryForProjectType(projectType);
+    patchForm("projectType", projectType);
+    patchForm("category", category);
+
+    if (form.workflowMode === "template") {
+      patchForm("workflowTemplate", getDefaultTemplateForProjectType(projectType));
+    }
+  }
+
+  function onWorkflowModeChange(mode: WorkflowMode) {
+    patchForm("workflowMode", mode);
+    if (mode !== "duplicate") {
+      patchForm("duplicateFromProjectId", "");
+      setDuplicateSearch("");
+    }
+    if (mode === "duplicate") {
+      void loadProjects();
+    }
+    if (mode === "template" && !form.workflowTemplate) {
+      patchForm("workflowTemplate", getDefaultTemplateForProjectType(form.projectType));
+    }
+  }
+
+  async function createClientInline() {
+    const name = newClientName.trim();
+    const email = newClientEmail.trim();
+    if (!name || !email) return;
+
+    setCreatingClient(true);
+    try {
+      const response = await fetch("/api/clients", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, status: "lead" }),
+      });
+
+      const payload = (await response.json()) as {
+        error?: string;
+        client?: { id: string; name: string; email: string };
+      };
+
+      if (!response.ok || !payload.client) {
+        setErrors((prev) => ({ ...prev, clientId: payload.error ?? "Creation client impossible." }));
+        return;
+      }
+
+      const nextClient = payload.client;
+      setClients((prev) => [nextClient, ...prev]);
+      patchForm("clientId", nextClient.id);
+      setClientSearch(nextClient.name);
+      setClientDropdownOpen(false);
+      setNewlyCreatedClientId(nextClient.id);
+      setNewClientName("");
+      setNewClientEmail("");
+      setErrors((prev) => ({ ...prev, clientId: undefined }));
+    } catch {
+      setErrors((prev) => ({ ...prev, clientId: "Creation client impossible." }));
+    } finally {
+      setCreatingClient(false);
     }
   }
 
@@ -247,8 +445,16 @@ export default function ProjectForm({ initialData, formKey = "new", onSubmit, on
       nextErrors.shortDescription = "Maximum 200 caracteres.";
     }
 
-    if (!form.category) {
-      nextErrors.category = "La categorie est requise.";
+    if (!form.projectType) {
+      nextErrors.projectType = "Le type de projet est requis.";
+    }
+
+    if (!form.workflowMode) {
+      nextErrors.workflowMode = "Le workflow est requis.";
+    }
+
+    if (form.workflowMode === "duplicate" && !form.duplicateFromProjectId) {
+      nextErrors.duplicateFromProjectId = "Selectionnez un projet a dupliquer.";
     }
 
     if (action === "publish" && !form.clientId) {
@@ -281,10 +487,45 @@ export default function ProjectForm({ initialData, formKey = "new", onSubmit, on
       await onSubmit({ ...form, status: finalStatus }, action);
       setIsDirty(false);
       localStorage.removeItem(storageKey);
+      setAutosaveStatus("saved");
       setAutosaveInfo("Formulaire enregistre");
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  const completionChecks = useMemo(
+    () => [
+      form.title.trim().length >= 3,
+      form.shortDescription.trim().length > 0,
+      Boolean(form.projectType),
+      Boolean(form.workflowMode),
+      form.workflowMode === "duplicate" ? Boolean(form.duplicateFromProjectId) : true,
+      Boolean(form.clientId),
+      Boolean(form.coverImage),
+      form.technologies.length > 0,
+      form.contentBlocks.length > 0,
+      Boolean(form.publicationDate),
+    ],
+    [form]
+  );
+
+  const completionPercent = useMemo(() => {
+    const done = completionChecks.filter(Boolean).length;
+    return Math.round((done / completionChecks.length) * 100);
+  }, [completionChecks]);
+
+  const autosaveToneClass =
+    autosaveStatus === "saving"
+      ? "bg-amber-50 text-amber-700 border-amber-200"
+      : autosaveStatus === "saved"
+        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+        : autosaveStatus === "error"
+          ? "bg-red-50 text-red-700 border-red-200"
+          : "bg-slate-50 text-slate-600 border-slate-200";
+
+  function goToStep(step: 1 | 2 | 3 | 4) {
+    setCurrentStep(step);
   }
 
   const figmaEmbedUrl = useMemo(() => {
@@ -292,8 +533,117 @@ export default function ProjectForm({ initialData, formKey = "new", onSubmit, on
     return `https://www.figma.com/embed?embed_host=share&url=${encodeURIComponent(form.figmaUrl)}`;
   }, [form.figmaUrl]);
 
+  const filteredClients = useMemo(() => {
+    const q = clientSearch.trim().toLowerCase();
+    if (!q) return clients.slice(0, 8);
+    return clients
+      .filter((client) => client.name.toLowerCase().includes(q))
+      .slice(0, 8);
+  }, [clientSearch, clients]);
+
+  const selectedClient = useMemo(
+    () => clients.find((client) => client.id === form.clientId) ?? null,
+    [clients, form.clientId]
+  );
+
+  const duplicateProjectsFiltered = useMemo(() => {
+    const q = duplicateSearch.trim().toLowerCase();
+    const pool = projects;
+    if (!q) return pool.slice(0, 8);
+    return pool.filter((project) => project.label.toLowerCase().includes(q)).slice(0, 8);
+  }, [duplicateSearch, projects]);
+
   return (
-    <div className="mx-auto w-full max-w-[800px] flex flex-col gap-4">
+    <div className="mx-auto w-full max-w-[1040px] flex flex-col gap-4">
+      <Card className="p-4 sm:p-5">
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-xs font-semibold uppercase tracking-[0.1em] text-blue-700">Creation projet</p>
+            <button
+              type="button"
+              onClick={() => setShowPreview((value) => !value)}
+              className="inline-flex items-center gap-2 rounded-lg border border-blue-100 bg-white px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-50"
+            >
+              {showPreview ? "Masquer preview" : "Apercu rapide"}
+            </button>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {PROJECT_FORM_STEPS.map((step) => (
+              <button
+                key={step.id}
+                type="button"
+                onClick={() => goToStep(step.id)}
+                className={[
+                  "rounded-xl border px-3 py-2 text-left transition-colors",
+                  currentStep === step.id
+                    ? "border-blue-200 bg-blue-50"
+                    : "border-neutral-200 bg-white hover:border-blue-100",
+                ].join(" ")}
+              >
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Etape {step.id}</p>
+                <p className="mt-0.5 text-sm font-semibold text-slate-900">{step.label}</p>
+              </button>
+            ))}
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between text-xs text-slate-600">
+              <span>Progression du formulaire</span>
+              <span className="font-semibold text-slate-900">{completionPercent}%</span>
+            </div>
+            <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-blue-600 to-blue-500 transition-all duration-300"
+                style={{ width: `${completionPercent}%` }}
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className={["rounded-full border px-2.5 py-1 text-xs font-semibold", autosaveToneClass].join(" ")}>
+              {autosaveInfo}
+            </span>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="xs"
+                type="button"
+                onClick={() => goToStep((Math.max(1, currentStep - 1) as 1 | 2 | 3 | 4))}
+                disabled={currentStep === 1}
+              >
+                Precedent
+              </Button>
+              <Button
+                variant="outline"
+                size="xs"
+                type="button"
+                onClick={() => goToStep((Math.min(4, currentStep + 1) as 1 | 2 | 3 | 4))}
+                disabled={currentStep === 4}
+              >
+                Suivant
+              </Button>
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      {showPreview ? (
+        <Card className="p-4 sm:p-5">
+          <p className="text-xs font-semibold uppercase tracking-[0.1em] text-slate-500">Preview</p>
+          <h3 className="mt-1 text-lg font-semibold text-slate-900">{form.title || "Titre du projet"}</h3>
+          <p className="mt-2 text-sm text-slate-600">{form.shortDescription || "La description apparaitra ici."}</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {form.technologies.slice(0, 6).map((tag) => (
+              <span key={tag} className="rounded-full border border-blue-100 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700">
+                {tag}
+              </span>
+            ))}
+          </div>
+        </Card>
+      ) : null}
+
+      {currentStep === 1 ? (
       <Section
         title="Informations de base"
         index={1}
@@ -333,25 +683,204 @@ export default function ProjectForm({ initialData, formKey = "new", onSubmit, on
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Select label="Categorie *" value={form.category} onChange={(value) => patchForm("category", value)} options={CATEGORY_OPTIONS} error={errors.category} />
-          <div>
-            <Select
-              label="Client associe"
-              value={form.clientId}
-              onChange={(value) => patchForm("clientId", value)}
-              options={clients}
-              error={errors.clientId}
+          <Select
+            label="Type de projet *"
+            value={form.projectType}
+            onChange={(value) => onProjectTypeChange(value)}
+            options={PROJECT_TYPE_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
+            error={errors.projectType}
+          />
+          <div className="flex flex-col gap-2" ref={clientComboboxRef}>
+            <label className="text-xs text-[var(--ui-text-secondary)]">Client associe</label>
+            <input
+              value={clientSearch}
+              onFocus={() => setClientDropdownOpen(true)}
+              onChange={(event) => {
+                const value = event.target.value;
+                setClientSearch(value);
+                const match = clients.find((client) => client.name.toLowerCase() === value.trim().toLowerCase());
+                patchForm("clientId", match?.id ?? "");
+                setClientDropdownOpen(true);
+              }}
+              placeholder="Rechercher un client..."
+              className="h-11 rounded-xl border px-3 text-sm outline-none"
+              style={{ borderColor: "var(--ui-border)", background: "var(--ui-input-bg)", color: "var(--ui-text)" }}
             />
-            {clients.length <= 1 ? (
-              <p className="mt-1 text-xs text-slate-500">
-                Aucun client disponible. 
-                <Link href="/dashboard/clients?create=1" className="font-semibold text-blue-700 hover:underline">
-                  Creer un client
-                </Link>
-              </p>
+
+            {clientDropdownOpen ? (
+              <div className="rounded-xl border" style={{ borderColor: "var(--ui-border)", background: "var(--ui-card)" }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    patchForm("clientId", "");
+                    setClientSearch("");
+                    setClientDropdownOpen(false);
+                  }}
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-blue-50"
+                  style={{ color: "var(--ui-text-secondary)" }}
+                >
+                  Aucun
+                </button>
+                {filteredClients.map((client) => (
+                  <button
+                    key={client.id}
+                    type="button"
+                    onClick={() => {
+                      patchForm("clientId", client.id);
+                      setClientSearch(client.name);
+                      setClientDropdownOpen(false);
+                    }}
+                    className="w-full border-t px-3 py-2 text-left text-sm hover:bg-blue-50"
+                    style={{ borderColor: "var(--ui-border-subtle)", color: "var(--ui-text)" }}
+                  >
+                    {client.name}
+                  </button>
+                ))}
+              </div>
             ) : null}
+
+            {selectedClient && selectedClient.id === newlyCreatedClientId ? (
+              <span className="inline-flex self-start rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
+                Nouveau client ajoute
+              </span>
+            ) : null}
+
+            {!selectedClient && clientSearch.trim().length >= 2 ? (
+              <div className="rounded-xl border p-3" style={{ borderColor: "var(--ui-border)", background: "var(--d-input)" }}>
+                <p className="text-xs font-semibold" style={{ color: "var(--ui-text-secondary)" }}>
+                  Client introuvable, creer maintenant
+                </p>
+                <input
+                  value={newClientName}
+                  onChange={(event) => setNewClientName(event.target.value)}
+                  placeholder="Nom du client"
+                  className="mt-2 h-9 w-full rounded-lg border px-2.5 text-sm outline-none"
+                  style={{ borderColor: "var(--ui-border)", background: "var(--ui-input-bg)", color: "var(--ui-text)" }}
+                />
+                <input
+                  value={newClientEmail}
+                  onChange={(event) => setNewClientEmail(event.target.value)}
+                  placeholder="Email du client"
+                  className="mt-2 h-9 w-full rounded-lg border px-2.5 text-sm outline-none"
+                  style={{ borderColor: "var(--ui-border)", background: "var(--ui-input-bg)", color: "var(--ui-text)" }}
+                />
+                <button
+                  type="button"
+                  onClick={() => void createClientInline()}
+                  disabled={creatingClient}
+                  className="mt-2 inline-flex h-8 items-center rounded-lg px-3 text-xs font-semibold text-white disabled:opacity-60"
+                  style={{ background: "var(--ui-primary)" }}
+                >
+                  {creatingClient ? "Creation..." : "Creer le client"}
+                </button>
+              </div>
+            ) : null}
+
+            {errors.clientId ? <p className="text-xs text-red-600">{errors.clientId}</p> : null}
           </div>
         </div>
+
+        <Card className="border border-blue-100 bg-blue-50/40 p-4">
+          <div className="mb-3 flex items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.08em] text-blue-700">Workflow Kanban</p>
+              <p className="mt-1 text-sm text-slate-700">Choisissez comment le board sera genere apres creation du projet.</p>
+            </div>
+            <span className="rounded-full border border-blue-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-blue-700">
+              Step cle
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 gap-2">
+            {WORKFLOW_MODE_OPTIONS.map((option) => {
+              const active = form.workflowMode === option.value;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => onWorkflowModeChange(option.value)}
+                  className={[
+                    "rounded-xl border px-3 py-2 text-left transition",
+                    active ? "border-blue-300 bg-white" : "border-blue-100 bg-white/80 hover:border-blue-200",
+                  ].join(" ")}
+                >
+                  <p className="text-sm font-semibold text-slate-900">{option.label}</p>
+                  <p className="text-xs text-slate-600">{option.description}</p>
+                </button>
+              );
+            })}
+          </div>
+
+          {errors.workflowMode ? <p className="mt-2 text-xs text-red-600">{errors.workflowMode}</p> : null}
+
+          {form.workflowMode === "template" ? (
+            <div className="mt-3">
+              <Select
+                label="Template de workflow"
+                value={form.workflowTemplate}
+                onChange={(value) => patchForm("workflowTemplate", value as WorkflowTemplate)}
+                options={WORKFLOW_TEMPLATE_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
+              />
+            </div>
+          ) : null}
+
+          {form.workflowMode === "duplicate" ? (
+            <div className="mt-3">
+              <label className="text-xs text-[var(--ui-text-secondary)]">Projet a dupliquer</label>
+              <div className="mt-1 flex items-center gap-2" ref={duplicateComboboxRef}>
+                <input
+                  value={duplicateSearch}
+                  onFocus={() => {
+                    setDuplicateDropdownOpen(true);
+                    void loadProjects();
+                  }}
+                  onChange={(event) => {
+                    const value = event.target.value;
+                    setDuplicateSearch(value);
+                    const match = projects.find((project) => project.label.toLowerCase() === value.trim().toLowerCase());
+                    patchForm("duplicateFromProjectId", match?.value ?? "");
+                    setDuplicateDropdownOpen(true);
+                  }}
+                  placeholder="Rechercher un projet..."
+                  className="h-11 w-full rounded-xl border px-3 text-sm outline-none"
+                  style={{ borderColor: "var(--ui-border)", background: "var(--ui-input-bg)", color: "var(--ui-text)" }}
+                />
+              </div>
+              <p className="mt-1 text-[11px]" style={{ color: "var(--ui-text-muted)" }}>
+                {loadingProjects
+                  ? "Mise a jour de la liste..."
+                  : "Liste mise a jour automatiquement toutes les 5s tant que le menu est ouvert."}
+              </p>
+
+              {duplicateDropdownOpen ? (
+                <div className="mt-2 rounded-xl border" style={{ borderColor: "var(--ui-border)", background: "var(--ui-card)" }}>
+                  {duplicateProjectsFiltered.length === 0 ? (
+                    <p className="px-3 py-2 text-xs" style={{ color: "var(--ui-text-muted)" }}>
+                      Aucun projet correspondant.
+                    </p>
+                  ) : (
+                    duplicateProjectsFiltered.map((project) => (
+                      <button
+                        key={project.value}
+                        type="button"
+                        onClick={() => {
+                          patchForm("duplicateFromProjectId", project.value);
+                          setDuplicateSearch(project.label);
+                          setDuplicateDropdownOpen(false);
+                        }}
+                        className="w-full border-t px-3 py-2 text-left text-sm first:border-t-0 hover:bg-blue-50"
+                        style={{ borderColor: "var(--ui-border-subtle)", color: "var(--ui-text)" }}
+                      >
+                        {project.label}
+                      </button>
+                    ))
+                  )}
+                </div>
+              ) : null}
+              {errors.duplicateFromProjectId ? <p className="mt-1 text-xs text-red-600">{errors.duplicateFromProjectId}</p> : null}
+            </div>
+          ) : null}
+        </Card>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
           <Select label="Status" value={form.status} onChange={(value) => patchForm("status", value as ProjectStatus)} options={STATUS_OPTIONS} />
@@ -376,7 +905,9 @@ export default function ProjectForm({ initialData, formKey = "new", onSubmit, on
           </label>
         </div>
       </Section>
+      ) : null}
 
+      {currentStep === 3 ? (
       <Section
         title="Medias"
         index={2}
@@ -414,7 +945,9 @@ export default function ProjectForm({ initialData, formKey = "new", onSubmit, on
           </div>
         ) : null}
       </Section>
+      ) : null}
 
+      {currentStep === 2 ? (
       <Section
         title="Technologies et Tags"
         index={3}
@@ -433,7 +966,9 @@ export default function ProjectForm({ initialData, formKey = "new", onSubmit, on
           placeholder="React, Next.js, Figma..."
         />
       </Section>
+      ) : null}
 
+      {currentStep === 2 ? (
       <Section
         title="Contenu riche (style Behance)"
         index={4}
@@ -447,7 +982,9 @@ export default function ProjectForm({ initialData, formKey = "new", onSubmit, on
       >
         <RichContentEditor blocks={form.contentBlocks} onChange={(blocks) => patchForm("contentBlocks", blocks)} />
       </Section>
+      ) : null}
 
+      {currentStep === 2 ? (
       <Section
         title="Liens externes"
         index={5}
@@ -462,7 +999,9 @@ export default function ProjectForm({ initialData, formKey = "new", onSubmit, on
         <Input label="Lien GitHub" type="url" value={form.githubUrl} onChange={(e) => patchForm("githubUrl", e.target.value)} placeholder="https://github.com/..." />
         <Input label="Lien Dribbble/Behance" type="url" value={form.dribbbleBehanceUrl} onChange={(e) => patchForm("dribbbleBehanceUrl", e.target.value)} placeholder="https://dribbble.com/..." />
       </Section>
+      ) : null}
 
+      {currentStep === 2 ? (
       <Section
         title="Testimonial client (optionnel)"
         index={6}
@@ -491,7 +1030,9 @@ export default function ProjectForm({ initialData, formKey = "new", onSubmit, on
           <ImageUploader label="Photo client" value={form.testimonialPhoto} onChange={(image) => patchForm("testimonialPhoto", image)} aspectRatio="1/1" />
         </div>
       </Section>
+      ) : null}
 
+      {currentStep === 4 ? (
       <Card className="p-0 overflow-hidden">
         <button
           type="button"
@@ -546,7 +1087,9 @@ export default function ProjectForm({ initialData, formKey = "new", onSubmit, on
           </div>
         ) : null}
       </Card>
+      ) : null}
 
+      {currentStep === 4 ? (
       <Section
         title="Options de publication"
         index={8}
@@ -571,6 +1114,7 @@ export default function ProjectForm({ initialData, formKey = "new", onSubmit, on
           />
         </div>
       </Section>
+      ) : null}
 
       <Card className="p-4 sm:p-5">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">

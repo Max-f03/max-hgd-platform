@@ -38,6 +38,9 @@ model User {
   projectTasks  ProjectTask[]
   changeRequests ProjectChangeRequest[]
   taskTransitions ProjectTaskTransition[]
+  chatbotServices ChatbotService[]
+  socialLinks   SocialLink[]
+  chatbotFAQs   ChatbotFAQ[]
 }
 
 model Settings {
@@ -45,9 +48,12 @@ model Settings {
 
   // Profil public
   publicName    String?
+  publicTitle   String?
   publicBio     String?
   publicEmail   String?
   publicPhone   String?
+  publicLocation String?
+  publicAvailability String?
 
   // Reseaux sociaux
   linkedin      String?
@@ -71,8 +77,11 @@ model Settings {
 
   // Chatbot
   chatbotEnabled Boolean  @default(true)
-  chatbotWelcome String?
-  chatbotPersonality String @default("professional")
+  chatbotUseAI   Boolean  @default(true)
+  chatbotWelcome String? @default("Bonjour ! Je suis l'assistant de Max. Comment puis-je vous aider ?")
+  chatbotPersonality String @default("friendly")
+  chatbotPrimaryColor String @default("#3B82F6")
+  chatbotQuickActions Json?
 
   userId        String    @unique
   user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -201,6 +210,7 @@ model ProjectTask {
 
   transitions   ProjectTaskTransition[]
   deliverable   ProjectDeliverable?
+  attachments   Attachment[]
 
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -208,6 +218,20 @@ model ProjectTask {
   @@index([projectId, stageId, position])
   @@index([userId])
   @@index([dueDate])
+}
+
+model Attachment {
+  id            String      @id @default(cuid())
+  taskId        String
+  url           String
+  name          String
+  type          String      // image | document
+  size          Int
+  createdAt     DateTime    @default(now())
+
+  task          ProjectTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId, createdAt])
 }
 
 model ProjectTaskTransition {
@@ -573,6 +597,10 @@ model ChatbotConversation {
   sessionId     String
   visitorName   String?
   visitorEmail  String?
+  visitorPhone  String?
+  status        String    @default("active")
+  notes         String?
+  rating        Int?
 
   messages      ChatbotMessage[]
 
@@ -580,10 +608,61 @@ model ChatbotConversation {
   updatedAt     DateTime  @updatedAt
 }
 
+model ChatbotService {
+  id            String    @id @default(uuid())
+  name          String
+  description   String?
+  priceRange    String?
+  icon          String?
+  order         Int       @default(0)
+  isActive      Boolean   @default(true)
+
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([userId, order])
+}
+
+model SocialLink {
+  id            String    @id @default(uuid())
+  platform      String
+  url           String
+  username      String?
+  isActive      Boolean   @default(true)
+  order         Int       @default(0)
+
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt     DateTime  @default(now())
+
+  @@index([userId, order])
+}
+
+model ChatbotFAQ {
+  id            String    @id @default(uuid())
+  question      String
+  answer        String
+  category      String?
+  order         Int       @default(0)
+  isActive      Boolean   @default(true)
+
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([userId, order])
+}
+
 model ChatbotMessage {
   id            String    @id @default(uuid())
 
-  role          String
+  role          String    // "user" ou "assistant"
   content       String
 
   conversationId String

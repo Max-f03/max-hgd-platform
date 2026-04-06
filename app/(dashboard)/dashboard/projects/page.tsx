@@ -141,7 +141,7 @@ export default function ProjectsPage() {
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-blue-700">Project ops</p>
-            <h2 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">Catalogue projets</h2>
+            <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">Catalogue projets</h1>
             <p className="mt-1 text-sm text-slate-600">{filteredProjects.length} projet{filteredProjects.length !== 1 ? "s" : ""} au total</p>
           </div>
           <Link
@@ -189,6 +189,7 @@ export default function ProjectsPage() {
               </svg>
               <input
                 type="text"
+                aria-label="Rechercher un projet"
                 placeholder="Rechercher un projet..."
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
@@ -196,6 +197,7 @@ export default function ProjectsPage() {
               />
             </div>
             <select
+              aria-label="Filtrer par categorie"
               value={categoryFilter}
               onChange={(event) => setCategoryFilter(event.target.value)}
               className="h-10 rounded-xl border border-blue-100 bg-slate-50 px-3 text-sm text-slate-700 outline-none transition focus:border-blue-400 focus:bg-white focus:ring-4 focus:ring-blue-500/15"
@@ -206,6 +208,7 @@ export default function ProjectsPage() {
               <option value="branding">Branding</option>
             </select>
             <select
+              aria-label="Filtrer par statut"
               value={statusFilter}
               onChange={(event) => setStatusFilter(event.target.value as "all" | ProjectStatus)}
               className="h-10 rounded-xl border border-blue-100 bg-slate-50 px-3 text-sm text-slate-700 outline-none transition focus:border-blue-400 focus:bg-white focus:ring-4 focus:ring-blue-500/15"
@@ -217,6 +220,7 @@ export default function ProjectsPage() {
               <option value="archived">Archive</option>
             </select>
             <select
+              aria-label="Trier les projets"
               value={sortMode}
               onChange={(event) => setSortMode(event.target.value as SortMode)}
               className="h-10 rounded-xl border border-blue-100 bg-slate-50 px-3 text-sm text-slate-700 outline-none transition focus:border-blue-400 focus:bg-white focus:ring-4 focus:ring-blue-500/15"
@@ -267,12 +271,12 @@ export default function ProjectsPage() {
           </div>
 
           <div className="sticky top-2 z-10 mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-blue-100 bg-blue-50/80 px-3 py-2 backdrop-blur">
-            <label className="inline-flex items-center gap-2 text-xs font-semibold text-slate-700">
+            <label className="inline-flex min-h-11 items-center gap-2 text-xs font-semibold text-slate-700">
               <input
                 type="checkbox"
                 checked={allVisibleSelected}
                 onChange={toggleSelectAllVisible}
-                className="h-4 w-4 rounded border-blue-200 text-blue-600 focus:ring-blue-500/30"
+                className="h-5 w-5 rounded border-blue-200 text-blue-600 focus:ring-blue-500/30"
               />
               Tout selectionner (visible)
             </label>
@@ -337,12 +341,13 @@ export default function ProjectsPage() {
                     }}
                   >
                     <div className="flex items-center justify-between gap-2 border-b border-blue-100 bg-blue-50/70 px-3 py-2.5">
-                      <label className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-blue-200 bg-white" onClick={(event) => event.stopPropagation()}>
+                      <label className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-blue-200 bg-white" onClick={(event) => event.stopPropagation()}>
                         <input
                           type="checkbox"
+                          aria-label={`Selectionner le projet ${project.title}`}
                           checked={selectedProjectIds.includes(project.id)}
                           onChange={() => toggleProjectSelection(project.id)}
-                          className="h-3.5 w-3.5 rounded border-blue-200 text-blue-600 focus:ring-blue-500/30"
+                          className="h-4 w-4 rounded border-blue-200 text-blue-600 focus:ring-blue-500/30"
                         />
                       </label>
                       <div className="inline-flex rounded-full border border-white/70 px-2.5 py-1 text-[10px] font-semibold" style={{ background: statusConfig[project.status].bg, color: statusConfig[project.status].color }}>
@@ -396,12 +401,13 @@ export default function ProjectsPage() {
                     className="grid w-full grid-cols-[32px_1fr_140px_110px] items-center gap-2 border-b border-blue-50 px-4 py-3 text-left transition hover:bg-blue-50/40 last:border-b-0"
                     style={{ background: selectedProjectId === project.id ? "#EFF6FF" : "#FFF" }}
                   >
-                    <span onClick={(event) => event.stopPropagation()}>
+                    <span className="inline-flex h-11 w-11 items-center justify-center" onClick={(event) => event.stopPropagation()}>
                       <input
-                        type="checkbox"
-                        checked={selectedProjectIds.includes(project.id)}
+                          type="checkbox"
+                          aria-label={`Selectionner le projet ${project.title}`}
+                          checked={selectedProjectIds.includes(project.id)}
                         onChange={() => toggleProjectSelection(project.id)}
-                        className="h-4 w-4 rounded border-blue-200 text-blue-600 focus:ring-blue-500/30"
+                        className="h-5 w-5 rounded border-blue-200 text-blue-600 focus:ring-blue-500/30"
                       />
                     </span>
                     <div className="min-w-0">
@@ -467,6 +473,7 @@ export default function ProjectsPage() {
                   className="flex h-10 w-10 items-center justify-center rounded-lg text-white transition hover:opacity-90"
                   style={{ background: "#1D4ED8" }}
                   title="Voir"
+                  aria-label="Voir le projet"
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
@@ -477,6 +484,7 @@ export default function ProjectsPage() {
                   href={`/dashboard/projects/${selectedProject.id}/edit`}
                   className="flex h-10 w-10 items-center justify-center rounded-lg border border-blue-300 text-blue-700 transition hover:bg-blue-50"
                   title="Modifier"
+                  aria-label="Modifier le projet"
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
@@ -488,6 +496,7 @@ export default function ProjectsPage() {
                   onClick={() => handleDeleteProject(selectedProject.id, selectedProject.title)}
                   className="flex h-10 w-10 items-center justify-center rounded-lg border border-red-300 text-red-600 transition hover:bg-red-50"
                   title="Supprimer"
+                  aria-label="Supprimer le projet"
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <polyline points="3 6 5 6 21 6" />

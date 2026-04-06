@@ -38,17 +38,18 @@ export default function Modal({ isOpen, onClose, title, children }: ModalProps) 
     <div
       ref={overlayRef}
       onClick={handleOverlayClick}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 animate-fade-in px-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 animate-fade-in px-4"
     >
-      <div className="relative w-full max-w-lg bg-white rounded-2xl animate-scale-in">
-        <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-neutral-200">
+      <div className="relative w-full max-w-lg rounded-2xl animate-scale-in" style={{ background: "var(--ui-card)", border: "1px solid var(--ui-border)", transition: "background 0.25s ease, border-color 0.25s ease" }}>
+        <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b" style={{ borderColor: "var(--ui-border)" }}>
           {title && (
-            <h2 className="text-lg font-semibold text-neutral-900">{title}</h2>
+            <h2 className="text-lg font-semibold" style={{ color: "var(--ui-text)" }}>{title}</h2>
           )}
           <button
             type="button"
             onClick={onClose}
-            className="ml-auto flex items-center justify-center w-8 h-8 rounded-full text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 transition-colors duration-200"
+            className="ml-auto flex items-center justify-center w-8 h-8 rounded-full transition-colors duration-200"
+            style={{ color: "var(--ui-text-muted)" }}
             aria-label="Fermer"
           >
             <svg
@@ -66,7 +67,7 @@ export default function Modal({ isOpen, onClose, title, children }: ModalProps) 
             </svg>
           </button>
         </div>
-        <div className="px-6 py-6">{children}</div>
+        <div className="px-6 py-6" style={{ color: "var(--ui-text-secondary)" }}>{children}</div>
       </div>
     </div>
   );

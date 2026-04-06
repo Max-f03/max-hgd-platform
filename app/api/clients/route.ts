@@ -136,3 +136,56 @@ export async function DELETE(request: Request) {
 		return NextResponse.json({ error: "Requete invalide." }, { status: 400 });
 	}
 }
+
+export async function PATCH(request: Request) {
+	try {
+		const { searchParams } = new URL(request.url);
+		const id = searchParams.get("id");
+		if (!id) {
+			return NextResponse.json({ error: "Parametre id manquant." }, { status: 400 });
+		}
+
+		const body = (await request.json()) as Partial<ClientRecord>;
+		if (!body.name?.trim() || !body.email?.trim()) {
+			return NextResponse.json({ error: "Nom et email requis." }, { status: 400 });
+		}
+
+		const userId = await resolveActorUserId();
+		const existing = await prisma.client.findFirst({
+			where: { id, userId },
+			select: { id: true },
+		});
+
+		if (!existing) {
+			return NextResponse.json({ error: "Client introuvable." }, { status: 404 });
+		}
+
+		const updated = await prisma.client.update({
+			where: { id },
+			data: {
+				name: body.name.trim(),
+				email: body.email.trim(),
+				company: body.company?.trim() || null,
+				phone: body.phone?.trim() || null,
+				notes: body.notes?.trim() || null,
+				status: body.status ?? "lead",
+			},
+		});
+
+		const next: ClientRecord = {
+			id: updated.id,
+			initials: getInitials(updated.name),
+			name: updated.name,
+			email: updated.email,
+			company: updated.company ?? "-",
+			status: (updated.status as ClientStatus) ?? "lead",
+			projects: updated.totalProjects ?? 0,
+			phone: updated.phone ?? undefined,
+			notes: updated.notes ?? undefined,
+		};
+
+		return NextResponse.json({ client: next });
+	} catch {
+		return NextResponse.json({ error: "Requete invalide." }, { status: 400 });
+	}
+}

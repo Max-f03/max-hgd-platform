@@ -1,5 +1,17 @@
 @import "tailwindcss";
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 :root {
   --background: #F3F4F6;
   --foreground: #171717;
@@ -1061,8 +1073,213 @@ html {
   scroll-behavior: smooth;
 }
 
+/* ═══════════════════════════════════════════════════════════
+   PREMIUM ADMIN TOKENS — Light / Dark natif (parallèle)
+   Appliqué via html.dark (ThemeProvider)
+   ═══════════════════════════════════════════════════════════ */
+
+:root {
+  /* Core system tokens */
+  --ui-bg: #F8FAFC;
+  --ui-card: #FFFFFF;
+  --ui-text: #0F172A;
+  --ui-text-secondary: #334155;
+  --ui-text-muted: #64748B;
+  --ui-border: #E2E8F0;
+  --ui-border-subtle: #F1F5F9;
+  --ui-primary: #2563EB;
+  --ui-primary-hover: #1E40AF;
+  --ui-primary-soft: #DBEAFE;
+  --ui-input-bg: #FFFFFF;
+  --ui-success: #10B981;
+  --ui-warning: #D97706;
+
+  --ui-status-info-bg: var(--ui-primary-soft);
+  --ui-status-info-text: var(--ui-primary);
+  --ui-status-success-bg: rgba(16, 185, 129, 0.16);
+  --ui-status-success-text: #059669;
+  --ui-status-warning-bg: rgba(245, 158, 11, 0.18);
+  --ui-status-warning-text: #B45309;
+  --ui-status-neutral-bg: #F1F5F9;
+  --ui-status-neutral-text: #475569;
+
+  --d-grad-primary-start: #1D4ED8;
+  --d-grad-primary-end: #2563EB;
+  --d-grad-insight-start: #0F3DBE;
+  --d-grad-insight-mid: #1550D7;
+  --d-grad-insight-end: #2B6FF0;
+
+  --d-chart-1: #1D4ED8;
+  --d-chart-2: #2563EB;
+  --d-chart-3: #3B82F6;
+  --d-chart-4: #60A5FA;
+  --d-chart-5: #93C5FD;
+
+  --k-backlog-bg: #F8FAFC;
+  --k-backlog-border: #E2E8F0;
+  --k-backlog-header-bg: #F1F5F9;
+  --k-backlog-header-text: #334155;
+  --k-backlog-dot: #94A3B8;
+
+  --k-todo-bg: #EFF6FF;
+  --k-todo-border: #DBEAFE;
+  --k-todo-header-bg: #DBEAFE;
+  --k-todo-header-text: #1D4ED8;
+  --k-todo-dot: #3B82F6;
+
+  --k-in-progress-bg: #FFFBEB;
+  --k-in-progress-border: #FDE68A;
+  --k-in-progress-header-bg: #FEF3C7;
+  --k-in-progress-header-text: #92400E;
+  --k-in-progress-dot: #F59E0B;
+
+  --k-review-bg: #F5F3FF;
+  --k-review-border: #DDD6FE;
+  --k-review-header-bg: #EDE9FE;
+  --k-review-header-text: #6D28D9;
+  --k-review-dot: #8B5CF6;
+
+  --k-testing-bg: #FDF2F8;
+  --k-testing-border: #FBCFE8;
+  --k-testing-header-bg: #FCE7F3;
+  --k-testing-header-text: #BE185D;
+  --k-testing-dot: #EC4899;
+
+  --k-done-bg: #ECFDF5;
+  --k-done-border: #A7F3D0;
+  --k-done-header-bg: #D1FAE5;
+  --k-done-header-text: #065F46;
+  --k-done-dot: #10B981;
+
+  /* Dashboard aliases (existing components) */
+  --d-bg: var(--ui-bg);
+  --d-card: var(--ui-card);
+  --d-sidebar: var(--ui-card);
+  --d-header: rgba(255, 255, 255, 0.97);
+  --d-border: var(--ui-border);
+  --d-border2: var(--ui-border-subtle);
+  --d-input: #F1F5F9;
+  --d-t1: var(--ui-text);
+  --d-t2: var(--ui-text-secondary);
+  --d-t3: var(--ui-text-muted);
+  --d-t4: #94A3B8;
+  --d-nav-act: rgba(219, 234, 254, 0.8);
+  --d-nav-actc: var(--ui-primary-hover);
+  --d-nav-hov: #F8FAFC;
+  --d-nav-hovc: var(--ui-text-secondary);
+  --d-badge-bg: #DBEAFE;
+  --d-badge-c: #1E40AF;
+  --d-sep: var(--ui-border);
+  --d-icon: var(--ui-text-muted);
+  --d-scroll-track: #F1F5F9;
+  --d-scroll-thumb: #CBD5E1;
+}
+
+html.dark {
+  /* Core system tokens */
+  --ui-bg: #0B1220;
+  --ui-card: #111827;
+  --ui-text: #E5E7EB;
+  --ui-text-secondary: #9CA3AF;
+  --ui-text-muted: #6B7280;
+  --ui-border: #1F2937;
+  --ui-border-subtle: #111827;
+  --ui-primary: #3B82F6;
+  --ui-primary-hover: #60A5FA;
+  --ui-primary-soft: rgba(59, 130, 246, 0.15);
+  --ui-input-bg: #0F172A;
+  --ui-success: #34D399;
+  --ui-warning: #FBBF24;
+
+  --ui-status-info-bg: rgba(59, 130, 246, 0.2);
+  --ui-status-info-text: #BFDBFE;
+  --ui-status-success-bg: rgba(16, 185, 129, 0.2);
+  --ui-status-success-text: #6EE7B7;
+  --ui-status-warning-bg: rgba(245, 158, 11, 0.22);
+  --ui-status-warning-text: #FCD34D;
+  --ui-status-neutral-bg: #1F2937;
+  --ui-status-neutral-text: #9CA3AF;
+
+  --d-grad-primary-start: #2563EB;
+  --d-grad-primary-end: #3B82F6;
+  --d-grad-insight-start: #102D74;
+  --d-grad-insight-mid: #1D4ED8;
+  --d-grad-insight-end: #2563EB;
+
+  --d-chart-1: #3B82F6;
+  --d-chart-2: #60A5FA;
+  --d-chart-3: #93C5FD;
+  --d-chart-4: #38BDF8;
+  --d-chart-5: #67E8F9;
+
+  --k-backlog-bg: #0F172A;
+  --k-backlog-border: #1F2937;
+  --k-backlog-header-bg: #111827;
+  --k-backlog-header-text: #9CA3AF;
+  --k-backlog-dot: #6B7280;
+
+  --k-todo-bg: #0E1B33;
+  --k-todo-border: #1E3A8A;
+  --k-todo-header-bg: #172554;
+  --k-todo-header-text: #BFDBFE;
+  --k-todo-dot: #60A5FA;
+
+  --k-in-progress-bg: #261A07;
+  --k-in-progress-border: #78350F;
+  --k-in-progress-header-bg: #422006;
+  --k-in-progress-header-text: #FCD34D;
+  --k-in-progress-dot: #FBBF24;
+
+  --k-review-bg: #1F123A;
+  --k-review-border: #4C1D95;
+  --k-review-header-bg: #2E1065;
+  --k-review-header-text: #DDD6FE;
+  --k-review-dot: #A78BFA;
+
+  --k-testing-bg: #3A1026;
+  --k-testing-border: #831843;
+  --k-testing-header-bg: #500724;
+  --k-testing-header-text: #FBCFE8;
+  --k-testing-dot: #F472B6;
+
+  --k-done-bg: #052E2B;
+  --k-done-border: #064E3B;
+  --k-done-header-bg: #065F46;
+  --k-done-header-text: #A7F3D0;
+  --k-done-dot: #34D399;
+
+  /* Dashboard aliases (existing components) */
+  --d-bg: var(--ui-bg);
+  --d-card: var(--ui-card);
+  --d-sidebar: var(--ui-card);
+  --d-header: rgba(11, 18, 32, 0.96);
+  --d-border: var(--ui-border);
+  --d-border2: #0F172A;
+  --d-input: var(--ui-input-bg);
+  --d-t1: var(--ui-text);
+  --d-t2: var(--ui-text-secondary);
+  --d-t3: #9CA3AF;
+  --d-t4: #6B7280;
+  --d-nav-act: rgba(59, 130, 246, 0.18);
+  --d-nav-actc: #BFDBFE;
+  --d-nav-hov: rgba(59, 130, 246, 0.08);
+  --d-nav-hovc: var(--ui-text);
+  --d-badge-bg: rgba(59, 130, 246, 0.2);
+  --d-badge-c: #BFDBFE;
+  --d-sep: var(--ui-border);
+  --d-icon: var(--ui-text-secondary);
+  --d-scroll-track: #0F172A;
+  --d-scroll-thumb: #334155;
+}
+
+/* Scrollbar dark */
+html.dark ::-webkit-scrollbar { width: 5px; height: 5px; }
+html.dark ::-webkit-scrollbar-track { background: var(--d-scroll-track); }
+html.dark ::-webkit-scrollbar-thumb { background: var(--d-scroll-thumb); border-radius: 4px; }
+html.dark ::-webkit-scrollbar-thumb:hover { background: #444444; }
+
 body {
-  background: #F3F4F6;
+  background: var(--ui-bg);
   color: var(--foreground);
   font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 }

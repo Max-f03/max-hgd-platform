@@ -37,14 +37,35 @@ interface ProjectFormPayload {
   openGraphImage: UploadImageItem | null;
   publicationDate: string;
   displayOrder: number;
+  projectType: string;
+  workflowMode: "template" | "empty" | "duplicate";
+  workflowTemplate: string;
+  duplicateFromProjectId: string;
 }
 
 const categoryLabelMap: Record<string, string> = {
   "ux-ui": "UX/UI Design",
   frontend: "Frontend Dev",
   branding: "Branding",
+  "mobile-app": "App mobile",
+  "web-site": "Site web",
   other: "Autre",
 };
+
+const projectTypeToCategoryMap: Record<string, string> = {
+  "web-site": "frontend",
+  branding: "branding",
+  "mobile-app": "frontend",
+  "design-ui": "ux-ui",
+};
+
+function resolveCategory(projectType?: string, incomingCategory?: string): string {
+  if (incomingCategory) return incomingCategory;
+  if (projectType && projectTypeToCategoryMap[projectType]) {
+    return projectTypeToCategoryMap[projectType];
+  }
+  return "other";
+}
 
 function slugify(value: string): string {
   return value
@@ -216,6 +237,12 @@ export async function POST(request: Request) {
       date?: string;
       featured?: boolean;
       makeFromSummary?: boolean;
+      projectType?: string;
+      workflow?: {
+        mode?: "template" | "empty" | "duplicate";
+        templateKey?: string;
+        duplicateProjectId?: string;
+      };
     };
 
     const payload = (body.data ?? body) as Partial<ProjectFormPayload>;
@@ -228,6 +255,8 @@ export async function POST(request: Request) {
     const publicationDate = parseDateInput(payload.publicationDate ?? body.date ?? "") ?? new Date();
 
     const nextStatus = payload.status ?? body.status ?? "draft";
+    const projectType = payload.projectType?.trim() || body.projectType?.trim() || "";
+    const resolvedCategory = resolveCategory(projectType, payload.category ?? body.category);
     const incomingClientId = payload.clientId?.trim() || null;
 
     if (nextStatus === "published" && !incomingClientId) {
@@ -253,6 +282,15 @@ export async function POST(request: Request) {
 
     // Ignore stale or invalid client IDs for drafts (e.g. old mock ids from URL).
     const clientId = linkedClient ? incomingClientId : null;
+    const rawTags = payload.technologies?.length ? payload.technologies : [resolvedCategory];
+    const workflowMode = body.workflow?.mode ?? payload.workflowMode ?? "template";
+    const workflowTemplate = body.workflow?.templateKey ?? payload.workflowTemplate ?? "site-web";
+    const workflowTags = [
+      projectType ? `project-type:${projectType}` : "",
+      workflowMode ? `workflow:${workflowMode}` : "",
+      workflowTemplate ? `workflow-template:${workflowTemplate}` : "",
+    ].filter(Boolean);
+    const tags = Array.from(new Set([...rawTags, ...workflowTags]));
 
     const createData = {
       title: payload.title,
@@ -262,8 +300,8 @@ export async function POST(request: Request) {
       thumbnail: getFirstMediaUrl(payload.coverImage),
       images: (payload.galleryImages ?? []).map((item) => item.url),
       videoUrl: payload.videoUrl || null,
-      category: payload.category ?? body.category ?? "other",
-      tags: payload.technologies?.length ? payload.technologies : [payload.category ?? body.category ?? "project"],
+      category: resolvedCategory,
+      tags,
       technologies: payload.technologies ?? [],
       colors: ["#43a7e8", "#19d2dc"],
       liveUrl: payload.liveSiteUrl || null,
@@ -305,15 +343,27 @@ export async function POST(request: Request) {
 
     const created = await prisma.$transaction(async (tx) => {
       const project = await tx.project.create({ data: createData });
-      await createDefaultPipelineForProject(tx, {
+      const generatedWorkflow = await createDefaultPipelineForProject(tx, {
         projectId: project.id,
         userId,
         baselineDate: publicationDate,
+        workflow: {
+          mode: workflowMode,
+          templateKey: workflowTemplate,
+          duplicateProjectId:
+            body.workflow?.duplicateProjectId ?? payload.duplicateFromProjectId,
+        },
       });
-      return project;
+      return { project, generatedWorkflow };
     });
 
-    return NextResponse.json({ project: created }, { status: 201 });
+    return NextResponse.json(
+      {
+        project: created.project,
+        workflow: created.generatedWorkflow,
+      },
+      { status: 201 }
+    );
   } catch (error) {
     const message = error instanceof Error ? error.message : "Requete invalide.";
     return NextResponse.json({ error: message }, { status: 400 });
