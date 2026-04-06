@@ -23,7 +23,7 @@ export default function Hero() {
             }}
           >
             <Image
-              src="/IMAGE/avatar.jpg"
+              src="/image/avatar.jpg"
               alt="Max-Fructueux HOUNGBEDJI"
               width={140}
               height={220}
