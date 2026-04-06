@@ -27,6 +27,7 @@ export default function Hero() {
               alt="Max-Fructueux HOUNGBEDJI"
               width={140}
               height={220}
+              unoptimized
               className="w-full h-full object-cover"
               priority
             />
