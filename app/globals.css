@@ -23,7 +23,7 @@ html {
 
 @media (min-width: 1024px) {
   html {
-    font-size: 14px;
+    font-size: 13px;
   }
 }
 
@@ -1292,4 +1292,289 @@ body {
   background: var(--ui-bg);
   color: var(--foreground);
   font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
+@keyframes landing-orb-drift-1 {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(26px, -18px, 0) scale(1.08); }
+}
+
+@keyframes landing-orb-drift-2 {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(-30px, 22px, 0) scale(0.95); }
+}
+
+@keyframes landing-orb-drift-3 {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(18px, 26px, 0) scale(1.04); }
+}
+
+@keyframes hero-avatar-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-7px); }
+}
+
+@keyframes hero-cta-shine {
+  0% { transform: translateX(-140%) skewX(-18deg); opacity: 0; }
+  15% { opacity: 0.45; }
+  45% { transform: translateX(220%) skewX(-18deg); opacity: 0; }
+  100% { transform: translateX(220%) skewX(-18deg); opacity: 0; }
+}
+
+@keyframes hero-line-in {
+  0% {
+    opacity: 0;
+    transform: translateY(14px);
+    filter: blur(3px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes hero-fade-up {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.landing-orb {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(48px);
+  opacity: 0.4;
+}
+
+.landing-orb-1 {
+  width: 260px;
+  height: 260px;
+  top: 14%;
+  left: -80px;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.28) 0%, rgba(59, 130, 246, 0) 70%);
+  animation: landing-orb-drift-1 11s ease-in-out infinite;
+}
+
+.landing-orb-2 {
+  width: 220px;
+  height: 220px;
+  top: 38%;
+  right: -60px;
+  background: radial-gradient(circle, rgba(147, 197, 253, 0.4) 0%, rgba(147, 197, 253, 0) 70%);
+  animation: landing-orb-drift-2 12s ease-in-out infinite;
+}
+
+.landing-orb-3 {
+  width: 180px;
+  height: 180px;
+  bottom: 8%;
+  left: 35%;
+  background: radial-gradient(circle, rgba(191, 219, 254, 0.45) 0%, rgba(191, 219, 254, 0) 72%);
+  animation: landing-orb-drift-3 10s ease-in-out infinite;
+}
+
+.hero-avatar {
+  animation: hero-avatar-float 4.8s ease-in-out infinite;
+  box-shadow: 0 18px 44px rgba(59, 130, 246, 0.22);
+}
+
+.hero-cta-primary {
+  box-shadow: 0 10px 26px rgba(37, 99, 235, 0.34);
+}
+
+.hero-cta-shine {
+  position: absolute;
+  inset: -1px auto -1px -30%;
+  width: 42%;
+  background: linear-gradient(100deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.6) 45%, rgba(255, 255, 255, 0) 100%);
+  animation: hero-cta-shine 3.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.hero-line-reveal {
+  opacity: 0;
+  animation: hero-line-in 800ms cubic-bezier(0.16, 1, 0.3, 1) 120ms forwards;
+}
+
+.hero-line-reveal-delay {
+  animation-delay: 260ms;
+}
+
+.hero-fade-up {
+  opacity: 0;
+  animation: hero-fade-up 700ms cubic-bezier(0.16, 1, 0.3, 1) 360ms forwards;
+}
+
+.hero-fade-up-delay {
+  animation-delay: 420ms;
+}
+
+.hero-fade-up-delay-2 {
+  animation-delay: 540ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-orb-1,
+  .landing-orb-2,
+  .landing-orb-3,
+  .hero-avatar,
+  .hero-cta-shine,
+  .hero-line-reveal,
+  .hero-fade-up {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+  }
+}
+
+/* Keep public landing permanently light, even when html.dark is active */
+.landing-light {
+  color-scheme: light;
+  --ui-bg: #F8FAFC;
+  --ui-card: #FFFFFF;
+  --ui-text: #0F172A;
+  --ui-text-secondary: #334155;
+  --ui-text-muted: #64748B;
+  --ui-border: #E2E8F0;
+  --ui-border-subtle: #F1F5F9;
+  --ui-primary: #2563EB;
+  --ui-primary-hover: #1E40AF;
+  --ui-primary-soft: #DBEAFE;
+  --ui-input-bg: #FFFFFF;
+
+  --d-bg: #F8FAFC;
+  --d-card: #FFFFFF;
+  --d-sidebar: #FFFFFF;
+  --d-header: rgba(255, 255, 255, 0.97);
+  --d-border: #E2E8F0;
+  --d-border2: #F1F5F9;
+  --d-input: #F1F5F9;
+  --d-t1: #0F172A;
+  --d-t2: #334155;
+  --d-t3: #64748B;
+  --d-t4: #94A3B8;
+}
+
+/* Dashboard-only dark rescue for legacy hardcoded light utility classes */
+html.dark .dashboard-scope .bg-white,
+html.dark .dashboard-scope .bg-white\/95,
+html.dark .dashboard-scope .bg-white\/80 {
+  background-color: var(--d-card) !important;
+}
+
+html.dark .dashboard-scope .bg-slate-50,
+html.dark .dashboard-scope .bg-slate-50\/50,
+html.dark .dashboard-scope .bg-neutral-50,
+html.dark .dashboard-scope .bg-neutral-50\/50 {
+  background-color: var(--d-input) !important;
+}
+
+html.dark .dashboard-scope .bg-blue-50,
+html.dark .dashboard-scope .bg-blue-50\/70,
+html.dark .dashboard-scope .bg-blue-50\/60,
+html.dark .dashboard-scope .bg-blue-50\/50,
+html.dark .dashboard-scope .bg-blue-50\/40,
+html.dark .dashboard-scope .bg-blue-50\/35,
+html.dark .dashboard-scope .bg-blue-50\/30,
+html.dark .dashboard-scope .bg-blue-100 {
+  background-color: rgba(59, 130, 246, 0.16) !important;
+}
+
+html.dark .dashboard-scope .border-blue-100,
+html.dark .dashboard-scope .border-blue-200,
+html.dark .dashboard-scope .border-neutral-200,
+html.dark .dashboard-scope .border-neutral-300,
+html.dark .dashboard-scope .border-slate-200 {
+  border-color: var(--d-border) !important;
+}
+
+html.dark .dashboard-scope .border-blue-50,
+html.dark .dashboard-scope .border-neutral-100 {
+  border-color: var(--d-border2) !important;
+}
+
+html.dark .dashboard-scope .text-slate-900,
+html.dark .dashboard-scope .text-neutral-900 {
+  color: var(--d-t1) !important;
+}
+
+html.dark .dashboard-scope .text-slate-800,
+html.dark .dashboard-scope .text-slate-700,
+html.dark .dashboard-scope .text-neutral-700 {
+  color: var(--d-t2) !important;
+}
+
+html.dark .dashboard-scope .text-slate-500,
+html.dark .dashboard-scope .text-slate-400,
+html.dark .dashboard-scope .text-neutral-500,
+html.dark .dashboard-scope .text-neutral-400 {
+  color: var(--d-t3) !important;
+}
+
+html.dark .dashboard-scope .text-blue-800,
+html.dark .dashboard-scope .text-blue-700,
+html.dark .dashboard-scope .text-blue-600,
+html.dark .dashboard-scope .text-blue-500 {
+  color: #BFDBFE !important;
+}
+
+html.dark .dashboard-scope .hover\:bg-blue-50:hover,
+html.dark .dashboard-scope .hover\:bg-blue-100:hover,
+html.dark .dashboard-scope .hover\:bg-slate-100:hover,
+html.dark .dashboard-scope .hover\:bg-neutral-50:hover {
+  background-color: rgba(59, 130, 246, 0.22) !important;
+}
+
+/* Broader fallback for class variants that are hard to target explicitly */
+html.dark .dashboard-scope [class*="bg-white"] {
+  background-color: var(--d-card) !important;
+}
+
+html.dark .dashboard-scope [class*="bg-slate-50"],
+html.dark .dashboard-scope [class*="bg-neutral-50"] {
+  background-color: var(--d-input) !important;
+}
+
+html.dark .dashboard-scope [class*="bg-blue-50"],
+html.dark .dashboard-scope [class*="bg-blue-100"] {
+  background-color: rgba(59, 130, 246, 0.18) !important;
+}
+
+html.dark .dashboard-scope [class*="border-blue-"],
+html.dark .dashboard-scope [class*="border-neutral-"],
+html.dark .dashboard-scope [class*="border-slate-"] {
+  border-color: var(--d-border) !important;
+}
+
+html.dark .dashboard-scope [class*="text-slate-9"],
+html.dark .dashboard-scope [class*="text-neutral-9"] {
+  color: var(--d-t1) !important;
+}
+
+html.dark .dashboard-scope [class*="text-slate-8"],
+html.dark .dashboard-scope [class*="text-slate-7"],
+html.dark .dashboard-scope [class*="text-neutral-7"],
+html.dark .dashboard-scope [class*="text-slate-6"],
+html.dark .dashboard-scope [class*="text-neutral-6"],
+html.dark .dashboard-scope [class*="text-slate-5"],
+html.dark .dashboard-scope [class*="text-neutral-5"],
+html.dark .dashboard-scope [class*="text-slate-4"],
+html.dark .dashboard-scope [class*="text-neutral-4"] {
+  color: var(--d-t2) !important;
+}
+
+html.dark .dashboard-scope [class*="text-blue-"] {
+  color: #BFDBFE !important;
+}
+
+html.dark .dashboard-scope [class*="bg-[radial-gradient"],
+html.dark .dashboard-scope [class*="bg-[linear-gradient"] {
+  background-image: linear-gradient(135deg, #0F172A 0%, #111827 55%, #0B1220 100%) !important;
 }

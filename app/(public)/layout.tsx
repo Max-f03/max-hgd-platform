@@ -6,6 +6,7 @@ import prisma from "@/lib/prisma";
 interface QuickAction {
   label: string;
   message: string;
+  url?: string;
 }
 
 const DEFAULT_QUICK_ACTIONS: QuickAction[] = [
@@ -26,6 +27,7 @@ async function getChatbotSettings() {
       where: { userId: user.id },
       select: {
         chatbotEnabled: true,
+        chatbotName: true,
         chatbotWelcome: true,
         chatbotPrimaryColor: true,
         chatbotQuickActions: true,
@@ -39,12 +41,13 @@ async function getChatbotSettings() {
 function parseQuickActions(raw: unknown): QuickAction[] {
   if (!Array.isArray(raw)) return DEFAULT_QUICK_ACTIONS;
   const parsed = raw
-    .filter((item): item is { label?: unknown; message?: unknown } => !!item && typeof item === "object")
+    .filter((item): item is { label?: unknown; message?: unknown; url?: unknown } => !!item && typeof item === "object")
     .map((item) => ({
       label: typeof item.label === "string" ? item.label : "",
       message: typeof item.message === "string" ? item.message : "",
+      ...(typeof item.url === "string" && item.url.trim() ? { url: item.url.trim() } : {}),
     }))
-    .filter((item) => item.label.length > 0 && item.message.length > 0);
+    .filter((item) => item.label.length > 0);
   return parsed.length > 0 ? parsed : DEFAULT_QUICK_ACTIONS;
 }
 
@@ -56,6 +59,7 @@ export default async function PublicLayout({
   const settings = await getChatbotSettings();
 
   const enabled = settings?.chatbotEnabled ?? true;
+  const botName = settings?.chatbotName ?? "Assistant";
   const welcomeMessage =
     settings?.chatbotWelcome ??
     "Bonjour ! Je suis l'assistant de Max. Comment puis-je vous aider ?";
@@ -63,12 +67,13 @@ export default async function PublicLayout({
   const quickActions = parseQuickActions(settings?.chatbotQuickActions);
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="landing-light min-h-screen flex flex-col bg-[#F8FAFC] text-slate-900" data-force-light="true">
       <Navbar />
       <main className="flex-1">{children}</main>
       <Footer />
       <ChatWidget
         enabled={enabled}
+        botName={botName}
         welcomeMessage={welcomeMessage}
         primaryColor={primaryColor}
         quickActions={quickActions}

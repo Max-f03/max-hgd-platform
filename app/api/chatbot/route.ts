@@ -17,7 +17,7 @@ function getFallbackResponse(message: string, context: FallbackContext): ChatRes
     return {
       message: "Bonjour ! Bienvenue. Comment puis-je vous aider ? Vous cherchez un designer, un developpeur, ou les deux ?",
       actions: [
-        { label: "Voir les projets", url: "/portfolio" },
+        { label: "Voir les projets", url: "/projects" },
         { label: "Me contacter", url: "/contact" },
       ],
     }
@@ -27,7 +27,7 @@ function getFallbackResponse(message: string, context: FallbackContext): ChatRes
     return {
       message: "Decouvrez tous les projets sur la page Portfolio : applications, sites e-commerce, dashboards et plus encore !",
       actions: [
-        { label: "Voir le portfolio", url: "/portfolio" },
+        { label: "Voir le portfolio", url: "/projects" },
         { label: "Demander un devis", url: "/contact" },
       ],
     }
@@ -41,7 +41,7 @@ function getFallbackResponse(message: string, context: FallbackContext): ChatRes
     return {
       message: `Je propose : ${serviceList}. Lequel vous interesse ?`,
       actions: [
-        { label: "Voir les projets", url: "/portfolio" },
+        { label: "Voir les projets", url: "/projects" },
         { label: "Demander un devis", url: "/contact" },
       ],
     }
@@ -73,7 +73,7 @@ function getFallbackResponse(message: string, context: FallbackContext): ChatRes
       message: msg,
       actions: [
         { label: "En savoir plus", url: "/about" },
-        { label: "Voir les projets", url: "/portfolio" },
+        { label: "Voir les projets", url: "/projects" },
       ],
     }
   }
@@ -88,7 +88,7 @@ function getFallbackResponse(message: string, context: FallbackContext): ChatRes
   return {
     message: "Je suis la pour vous aider ! Vous cherchez des infos sur mes services, mes projets, ou vous voulez discuter d'un projet ?",
     actions: [
-      { label: "Voir les projets", url: "/portfolio" },
+      { label: "Voir les projets", url: "/projects" },
       { label: "Me contacter", url: "/contact" },
     ],
   }
@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
     }
 
     const adminRaw = await prisma.user.findFirst({
-      where: { role: "admin" },
+      orderBy: { createdAt: "asc" },
       include: {
         settings: true,
         chatbotServices: {
@@ -205,9 +205,9 @@ export async function POST(request: NextRequest) {
           personality,
           context: {
             personalInfo: {
-              name: adminSettings.publicName ?? undefined,
+              name: adminSettings.publicName ?? admin.name ?? undefined,
               title: adminSettings.publicTitle ?? undefined,
-              email: admin.email,
+              email: adminSettings.publicEmail ?? admin.email,
               phone: adminSettings.publicPhone ?? undefined,
               location: adminSettings.publicLocation ?? undefined,
               availability: adminSettings.publicAvailability ?? undefined,

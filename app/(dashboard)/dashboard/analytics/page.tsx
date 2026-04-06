@@ -144,21 +144,21 @@ export default function AnalyticsPage() {
             </div>
           </AdminCard>
 
-          <div className="rounded-3xl border border-blue-200 bg-[linear-gradient(145deg,#0f3dbe_0%,#1550d7_45%,#2b6ff0_100%)] p-6 text-white shadow-[0_16px_36px_rgba(37,99,235,0.35)]">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-blue-100">Funnel snapshot</p>
+          <div className="rounded-3xl border border-blue-200 bg-[linear-gradient(145deg,#eaf2ff_0%,#dbeafe_45%,#c7dcff_100%)] p-6 text-slate-900 shadow-[0_16px_30px_rgba(37,99,235,0.14)] dark:bg-[linear-gradient(145deg,#0f3dbe_0%,#1550d7_45%,#2b6ff0_100%)] dark:text-white dark:shadow-[0_16px_36px_rgba(37,99,235,0.35)]">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-blue-700 dark:text-blue-100">Funnel snapshot</p>
             <h3 className="mt-2 text-xl font-semibold leading-tight">Taux de closing en progression</h3>
-            <p className="mt-2 text-sm leading-6 text-blue-100/90">+6.2 points depuis le dernier cycle sur les leads inbound et referral.</p>
+            <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-blue-100/90">+6.2 points depuis le dernier cycle sur les leads inbound et referral.</p>
 
             <div className="mt-6 flex items-center justify-center">
               <div className="relative h-40 w-40 rounded-full bg-[conic-gradient(#dbeafe_0deg_105deg,#93c5fd_105deg_215deg,#60a5fa_215deg_290deg,#1d4ed8_290deg_360deg)] p-4">
-                <div className="flex h-full w-full flex-col items-center justify-center rounded-full bg-blue-700">
+                <div className="flex h-full w-full flex-col items-center justify-center rounded-full bg-blue-600 text-white dark:bg-blue-700">
                   <p className="text-[11px] text-blue-100">Close rate</p>
                   <p className="mt-1 text-3xl font-semibold">29%</p>
                 </div>
               </div>
             </div>
 
-            <p className="mt-4 text-center text-xs text-blue-100/90">Objectif trimestre: 33%</p>
+            <p className="mt-4 text-center text-xs text-slate-600 dark:text-blue-100/90">Objectif trimestre: 33%</p>
           </div>
         </div>
       </div>

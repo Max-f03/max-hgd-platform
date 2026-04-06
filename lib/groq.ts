@@ -87,14 +87,14 @@ export async function generateChatResponse({
 
   let contextInfo = ""
 
-  if (personalInfo?.name) {
+  if (personalInfo && (personalInfo.name || personalInfo.title || personalInfo.email)) {
     contextInfo += `
 INFORMATIONS SUR MOI :
-- Je m'appelle : ${personalInfo.name}
-- Mon metier : ${personalInfo.title || "Designer/Developpeur"}
-- Email : ${personalInfo.email || "Non specifie"}
-- Telephone : ${personalInfo.phone || "Non specifie"}
-- Localisation : ${personalInfo.location || "Non specifie"}
+${personalInfo.name ? `- Je m'appelle : ${personalInfo.name}` : ""}
+${personalInfo.title ? `- Mon metier : ${personalInfo.title}` : "- Mon metier : Designer/Developpeur"}
+${personalInfo.email ? `- Email : ${personalInfo.email}` : ""}
+${personalInfo.phone ? `- Telephone : ${personalInfo.phone}` : ""}
+${personalInfo.location ? `- Localisation : ${personalInfo.location}` : ""}
 - Disponibilite : ${personalInfo.availability || "Disponible pour de nouveaux projets"}
 `
   }
@@ -139,7 +139,7 @@ Tu es l'assistant virtuel d'un designer/developpeur freelance.
 ${contextInfo}
 
 PAGES DU SITE (pour rediriger les visiteurs) :
-- /portfolio : Voir tous les projets et realisations
+- /projects : Voir tous les projets et realisations
 - /contact : Formulaire de contact et demande de devis
 - /about : Parcours et competences
 - / : Page d'accueil
@@ -147,20 +147,24 @@ PAGES DU SITE (pour rediriger les visiteurs) :
 REGLES :
 1. Reponds TOUJOURS en francais
 2. Sois naturel et oriente ACTION (2-4 phrases max)
-3. Quand quelqu'un veut voir des projets/realisations, envoie-le sur /portfolio
+3. Quand quelqu'un veut voir des projets/realisations, envoie-le sur /projects
 4. Quand quelqu'un veut un devis ou collaborer, envoie-le sur /contact
 5. Sois commercial : convertis les visiteurs en clients
 6. Propose toujours une action concrete
 
-FORMAT DE REPONSE (JSON uniquement, aucun texte avant ou apres) :
+FORMAT DE REPONSE OBLIGATOIRE :
+- Reponds UNIQUEMENT avec un objet JSON valide, RIEN d'autre avant ou apres.
+- INTERDIT : ecrire du texte avant ou apres le JSON.
+- INTERDIT : utiliser des blocs markdown (pas de backticks).
+
 {
-  "message": "ta reponse textuelle",
+  "message": "ta reponse textuelle ici",
   "actions": [
     { "label": "Libelle du bouton", "url": "/chemin-ou-https://..." }
   ]
 }
 
-Maximum 2 actions. Si aucune action pertinente, laisse le tableau vide.`
+Maximum 2 actions. Si aucune action pertinente, "actions": [].`
 
   const messages: ChatMessage[] = [
     { role: "system", content: systemPrompt },
@@ -182,23 +186,37 @@ Maximum 2 actions. Si aucune action pertinente, laisse le tableau vide.`
     throw new Error("Pas de reponse de Groq")
   }
 
-  // Nettoyer les backticks markdown si presents
+  // Extraire le JSON même si le modèle a ajouté du texte avant/après
   let cleaned = responseText.trim()
+
+  // Retirer les blocs markdown
   if (cleaned.startsWith("```json")) cleaned = cleaned.slice(7)
   else if (cleaned.startsWith("```")) cleaned = cleaned.slice(3)
   if (cleaned.endsWith("```")) cleaned = cleaned.slice(0, -3)
   cleaned = cleaned.trim()
 
+  // Trouver le premier objet JSON dans la réponse (même avec texte autour)
+  const jsonMatch = cleaned.match(/\{[\s\S]*"message"[\s\S]*\}/)
+  if (jsonMatch) {
+    cleaned = jsonMatch[0]
+  }
+
   try {
     const parsed = JSON.parse(cleaned) as { message?: string; actions?: ActionButton[] }
-    return {
-      message: typeof parsed.message === "string" ? parsed.message : responseText.trim(),
-      actions: Array.isArray(parsed.actions) ? parsed.actions : [],
+    if (typeof parsed.message === "string") {
+      return {
+        message: parsed.message,
+        actions: Array.isArray(parsed.actions) ? parsed.actions : [],
+      }
     }
   } catch {
-    return {
-      message: responseText.trim(),
-      actions: [],
-    }
+    // parsing échoué, on utilise le texte brut sans le JSON
+  }
+
+  // Fallback : retirer tout bloc JSON du texte brut avant de l'afficher
+  const textOnly = responseText.replace(/\{[\s\S]*"message"[\s\S]*\}/g, "").trim()
+  return {
+    message: textOnly || responseText.trim(),
+    actions: [],
   }
 }

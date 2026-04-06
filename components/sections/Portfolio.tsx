@@ -124,8 +124,8 @@ export default function Portfolio() {
       : projectList.filter((p) => p.category === activeFilter);
 
   return (
-    <section id="portfolio" className="py-16 lg:py-20 px-4 bg-white">
-      <div className="max-w-5xl mx-auto flex flex-col gap-12">
+    <section id="portfolio" className="py-16 sm:py-20 lg:py-24 px-4 bg-white">
+      <div className="max-w-6xl mx-auto flex flex-col gap-10 sm:gap-12 lg:gap-14">
         <Reveal>
           <div className="flex flex-col gap-3 text-center">
             <div className="flex justify-center">
@@ -133,7 +133,7 @@ export default function Portfolio() {
                 Portfolio
               </span>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-medium text-neutral-900">
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-medium text-neutral-900">
               Mes projets recents
             </h2>
             <p className="text-neutral-500 max-w-xl mx-auto text-sm leading-relaxed">
@@ -143,14 +143,14 @@ export default function Portfolio() {
         </Reveal>
 
         <Reveal delay={100}>
-          <div className="flex flex-wrap justify-center gap-2">
+          <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
             {filters.map((filter) => (
               <button
                 key={filter}
                 type="button"
                 onClick={() => setActiveFilter(filter)}
                 className={[
-                  "px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200",
+                  "px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-colors duration-200",
                   activeFilter === filter
                     ? "bg-neutral-900 text-white"
                     : "bg-white text-neutral-500 border border-neutral-200 hover:border-neutral-400 hover:text-neutral-900",
@@ -163,14 +163,14 @@ export default function Portfolio() {
         </Reveal>
 
         <Reveal delay={200}>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 lg:gap-7">
             {filtered.map((project) => (
               <div
                 key={project.id}
                 className="bg-white border border-neutral-200 rounded-2xl overflow-hidden group transition-all duration-300 h-full flex flex-col"
               >
                 <div
-                  className="relative h-36"
+                  className="relative h-32 sm:h-36"
                   style={{ background: project.gradient }}
                 >
                   <span
@@ -185,11 +185,11 @@ export default function Portfolio() {
                     </span>
                   )}
                 </div>
-                <div className="p-4 flex flex-col gap-1.5 flex-1">
+                <div className="p-4 sm:p-5 lg:p-6 flex flex-col gap-2 flex-1">
                   <span className={`text-xs font-medium uppercase tracking-wide ${project.categoryColor}`}>
                     {project.category}
                   </span>
-                  <h3 className="font-medium text-neutral-900 text-sm">
+                  <h3 className="font-medium text-neutral-900 text-sm sm:text-base">
                     {project.title}
                   </h3>
                   <p className="text-xs text-neutral-500 leading-relaxed">
@@ -215,7 +215,7 @@ export default function Portfolio() {
         <div className="flex justify-center">
           <Link
             href="/projects"
-            className="px-8 py-3 rounded-full border border-neutral-300 text-sm font-medium text-neutral-700 hover:border-neutral-500 hover:text-neutral-900 transition-colors duration-200"
+            className="w-full sm:w-auto text-center px-6 sm:px-8 py-3 rounded-full border border-neutral-300 text-sm font-medium text-neutral-700 hover:border-neutral-500 hover:text-neutral-900 transition-colors duration-200"
           >
             Decouvrir plus de projets
           </Link>

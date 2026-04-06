@@ -139,7 +139,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const avatarUrl = accountProfile?.avatarUrl ?? null;
 
   return (
-    <div className="min-h-screen" style={{ background: "var(--d-bg)", transition: "background 0.25s ease, color 0.25s ease" }}>
+    <div className="dashboard-scope min-h-screen" style={{ background: "var(--d-bg)", transition: "background 0.25s ease, color 0.25s ease" }}>
       <NavigationBar />
 
       {liveNotifToast ? (
@@ -163,15 +163,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </div>
 
       {/* Main */}
-      <div className="lg:ml-[260px] flex flex-col min-h-screen">
+      <div className="lg:ml-[220px] flex flex-col min-h-screen">
 
         {/* Header */}
         <header
-          className="sticky top-0 z-20 flex items-center gap-4 px-6 backdrop-blur-md relative"
-          style={{ height: "64px", background: "var(--d-header)", borderBottom: "1px solid var(--d-border)" }}
+          className="sticky top-0 z-20 flex items-center gap-3 px-4 backdrop-blur-md relative"
+          style={{ height: "52px", background: "var(--d-header)", borderBottom: "1px solid var(--d-border)" }}
         >
           {/* Burger */}
-          <button type="button" className="lg:hidden w-8 h-8 flex items-center justify-center rounded-lg transition-colors" style={{ color: "var(--d-icon)" }} onClick={() => setSidebarOpen(true)}>
+          <button type="button" className="lg:hidden w-7 h-7 flex items-center justify-center rounded-lg transition-colors" style={{ color: "var(--d-icon)" }} onClick={() => setSidebarOpen(true)}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
             </svg>
@@ -190,14 +190,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {/* Recherche */}
           <div className="hidden sm:block">
             <div className="relative">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--d-t4)" }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute left-2.5 top-1/2 -translate-y-1/2" style={{ color: "var(--d-t4)" }}>
                 <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
               </svg>
               <input
                 type="text"
                 placeholder="Rechercher..."
-                className="outline-none text-sm transition-all"
-                style={{ width: "220px", paddingLeft: "32px", paddingRight: "12px", paddingTop: "7px", paddingBottom: "7px", background: "var(--d-input)", border: "1px solid transparent", borderRadius: "9999px", color: "var(--d-t1)" }}
+                className="outline-none text-xs transition-all"
+                style={{ width: "180px", paddingLeft: "28px", paddingRight: "10px", paddingTop: "5px", paddingBottom: "5px", background: "var(--d-input)", border: "1px solid transparent", borderRadius: "9999px", color: "var(--d-t1)" }}
                 onFocus={e => { e.currentTarget.style.borderColor = "#1D4ED8"; }}
                 onBlur={e => { e.currentTarget.style.borderColor = "transparent"; }}
               />
@@ -269,7 +269,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </header>
 
         {/* Contenu */}
-        <main className="flex-1 p-6 lg:p-7">{children}</main>
+        <main className="flex-1 p-4 lg:p-5">{children}</main>
       </div>
     </div>
   );

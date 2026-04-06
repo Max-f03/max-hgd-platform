@@ -53,7 +53,7 @@ export default function LoginPage() {
               </div>
               <p className="text-xs text-slate-500">
                 Pas de compte ?{" "}
-                <Link href="/contact" className="font-semibold text-slate-700 underline underline-offset-2 hover:text-slate-900">
+                <Link href="/#contact" className="font-semibold text-slate-700 underline underline-offset-2 hover:text-slate-900">
                   Contact
                 </Link>
               </p>
@@ -148,7 +148,7 @@ export default function LoginPage() {
                 <Link href="/" className="transition hover:text-slate-700">
                   Privacy
                 </Link>
-                <Link href="/contact" className="transition hover:text-slate-700">
+                <Link href="/#contact" className="transition hover:text-slate-700">
                   Support
                 </Link>
               </div>

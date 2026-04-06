@@ -78,6 +78,7 @@ model Settings {
   // Chatbot
   chatbotEnabled Boolean  @default(true)
   chatbotUseAI   Boolean  @default(true)
+  chatbotName    String?  @default("Assistant")
   chatbotWelcome String? @default("Bonjour ! Je suis l'assistant de Max. Comment puis-je vous aider ?")
   chatbotPersonality String @default("friendly")
   chatbotPrimaryColor String @default("#3B82F6")

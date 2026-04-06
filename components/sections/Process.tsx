@@ -57,16 +57,16 @@ import Reveal from "@/components/ui/Reveal";
 
 export default function Process() {
   return (
-    <section id="process" className="py-16 lg:py-20 px-4 bg-white">
-      <div className="max-w-5xl mx-auto flex flex-col gap-12">
+    <section id="process" className="py-16 sm:py-20 lg:py-24 px-4 bg-white">
+      <div className="max-w-5xl mx-auto flex flex-col gap-10 sm:gap-12 lg:gap-14">
         <Reveal>
-          <div className="flex flex-col gap-3 text-center">
+          <div className="flex flex-col gap-4 text-center">
             <div className="flex justify-center">
               <span className="px-4 py-1.5 rounded-full bg-primary-50 text-primary-600 text-xs font-semibold tracking-widest uppercase">
                 Processus
               </span>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-medium text-neutral-900">
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-medium text-neutral-900">
               Ma facon de travailler
             </h2>
             <p className="text-neutral-500 max-w-xl mx-auto text-sm leading-relaxed">
@@ -76,23 +76,23 @@ export default function Process() {
           </div>
         </Reveal>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-5 lg:gap-6">
           {steps.map((step, index) => (
             <Reveal key={step.number} delay={(index * 100) as 0 | 100 | 200 | 300}>
             <div
-              className="flex flex-col gap-4 bg-white border border-neutral-200 rounded-2xl p-6 h-full"
+              className="flex flex-col gap-4 sm:gap-5 bg-white border border-neutral-200 rounded-2xl p-5 sm:p-6 h-full"
             >
               <div className="flex items-start justify-between">
                 <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary-50 text-primary-500">
                   {step.icon}
                 </div>
-                <span className="text-2xl font-black text-neutral-100 select-none">
+                <span className="text-xl sm:text-2xl font-black text-neutral-100 select-none">
                   {step.number}
                 </span>
               </div>
               <div className="flex flex-col gap-1.5">
                 <h3 className="font-medium text-neutral-900 text-sm">{step.title}</h3>
-                <p className="text-xs text-neutral-500 leading-relaxed">
+                <p className="text-xs sm:text-sm text-neutral-500 leading-relaxed">
                   {step.description}
                 </p>
               </div>

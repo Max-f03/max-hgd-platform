@@ -38,6 +38,40 @@ function getProjectInitials(title: string): string {
   return words.map((word) => word[0]?.toUpperCase() ?? "").join("") || "PR";
 }
 
+function SelectionCheckbox({
+  checked,
+  onToggle,
+  label,
+}: {
+  checked: boolean;
+  onToggle: () => void;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      role="checkbox"
+      aria-checked={checked}
+      aria-label={label}
+      onClick={onToggle}
+      className={[
+        "inline-flex h-9 w-9 items-center justify-center rounded-lg border transition-colors",
+        checked
+          ? "border-blue-500 bg-blue-100 text-blue-700"
+          : "border-blue-200 bg-slate-50 text-slate-500 hover:bg-blue-50",
+      ].join(" ")}
+    >
+      {checked ? (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+      ) : (
+        <span className="h-2.5 w-2.5 rounded-sm border border-current/70" />
+      )}
+    </button>
+  );
+}
+
 export default function ProjectsPage() {
   const [projects, setProjects] = useState(initialProjects);
   const [search, setSearch] = useState("");
@@ -172,7 +206,7 @@ export default function ProjectsPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.72fr)_340px]" style={{ animation: "fadeSlideUp 520ms ease-out both" }}>
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_300px] 2xl:grid-cols-[minmax(0,1.22fr)_320px]" style={{ animation: "fadeSlideUp 520ms ease-out both" }}>
         <div className="rounded-3xl border border-blue-100 bg-white p-4 sm:p-5">
           <div className="rounded-2xl border border-blue-100 bg-white p-3">
             <div className="mb-2 flex items-center justify-between gap-2">
@@ -271,15 +305,10 @@ export default function ProjectsPage() {
           </div>
 
           <div className="sticky top-2 z-10 mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-blue-100 bg-blue-50/80 px-3 py-2 backdrop-blur">
-            <label className="inline-flex min-h-11 items-center gap-2 text-xs font-semibold text-slate-700">
-              <input
-                type="checkbox"
-                checked={allVisibleSelected}
-                onChange={toggleSelectAllVisible}
-                className="h-5 w-5 rounded border-blue-200 text-blue-600 focus:ring-blue-500/30"
-              />
-              Tout selectionner (visible)
-            </label>
+            <div className="inline-flex min-h-11 items-center gap-2 text-xs font-semibold text-slate-700">
+              <SelectionCheckbox checked={allVisibleSelected} onToggle={toggleSelectAllVisible} label="Tout selectionner (visible)" />
+              <span>Tout selectionner (visible)</span>
+            </div>
 
             {selectedProjectIds.length > 0 ? (
               <div className="inline-flex flex-wrap items-center gap-2">
@@ -323,7 +352,7 @@ export default function ProjectsPage() {
           </div>
 
           {viewMode === "grid" ? (
-            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-5 grid gap-4 sm:grid-cols-2 2xl:grid-cols-3">
               {filteredProjects.length === 0 ? (
                 <div className="py-12 text-center sm:col-span-2 lg:col-span-3">
                   <p className="text-sm text-slate-400">Aucun projet trouve</p>
@@ -334,22 +363,21 @@ export default function ProjectsPage() {
                     key={project.id}
                     type="button"
                     onClick={() => setSelectedProjectId(project.id)}
-                    className="group overflow-hidden rounded-2xl border bg-white text-left transition-all duration-200"
-                    style={{
-                      borderColor: selectedProjectId === project.id ? "#3B82F6" : "#DBEAFE",
-                      boxShadow: selectedProjectId === project.id ? "0 0 0 2px rgba(59,130,246,0.16)" : "none",
-                    }}
+                    className={[
+                      "group overflow-hidden rounded-2xl border text-left transition-all duration-200",
+                      selectedProjectId === project.id
+                        ? "bg-white border-blue-400 shadow-[0_0_0_2px_rgba(59,130,246,0.18)]"
+                        : "bg-white border-blue-100 hover:border-blue-300 hover:-translate-y-0.5",
+                    ].join(" ")}
                   >
                     <div className="flex items-center justify-between gap-2 border-b border-blue-100 bg-blue-50/70 px-3 py-2.5">
-                      <label className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-blue-200 bg-white" onClick={(event) => event.stopPropagation()}>
-                        <input
-                          type="checkbox"
-                          aria-label={`Selectionner le projet ${project.title}`}
+                      <div onClick={(event) => event.stopPropagation()}>
+                        <SelectionCheckbox
                           checked={selectedProjectIds.includes(project.id)}
-                          onChange={() => toggleProjectSelection(project.id)}
-                          className="h-4 w-4 rounded border-blue-200 text-blue-600 focus:ring-blue-500/30"
+                          onToggle={() => toggleProjectSelection(project.id)}
+                          label={`Selectionner le projet ${project.title}`}
                         />
-                      </label>
+                      </div>
                       <div className="inline-flex rounded-full border border-white/70 px-2.5 py-1 text-[10px] font-semibold" style={{ background: statusConfig[project.status].bg, color: statusConfig[project.status].color }}>
                         {statusConfig[project.status].label}
                       </div>
@@ -398,16 +426,16 @@ export default function ProjectsPage() {
                     key={project.id}
                     type="button"
                     onClick={() => setSelectedProjectId(project.id)}
-                    className="grid w-full grid-cols-[32px_1fr_140px_110px] items-center gap-2 border-b border-blue-50 px-4 py-3 text-left transition hover:bg-blue-50/40 last:border-b-0"
-                    style={{ background: selectedProjectId === project.id ? "#EFF6FF" : "#FFF" }}
+                    className={[
+                      "grid w-full grid-cols-[32px_1fr_140px_110px] items-center gap-2 border-b border-blue-50 dark:border-slate-700 px-4 py-3 text-left transition last:border-b-0",
+                      selectedProjectId === project.id ? "bg-blue-50" : "bg-white hover:bg-blue-50/40",
+                    ].join(" ")}
                   >
                     <span className="inline-flex h-11 w-11 items-center justify-center" onClick={(event) => event.stopPropagation()}>
-                      <input
-                          type="checkbox"
-                          aria-label={`Selectionner le projet ${project.title}`}
-                          checked={selectedProjectIds.includes(project.id)}
-                        onChange={() => toggleProjectSelection(project.id)}
-                        className="h-5 w-5 rounded border-blue-200 text-blue-600 focus:ring-blue-500/30"
+                      <SelectionCheckbox
+                        checked={selectedProjectIds.includes(project.id)}
+                        onToggle={() => toggleProjectSelection(project.id)}
+                        label={`Selectionner le projet ${project.title}`}
                       />
                     </span>
                     <div className="min-w-0">
@@ -436,57 +464,57 @@ export default function ProjectsPage() {
         <div className="rounded-3xl border border-blue-100 bg-white p-4 sm:p-5 shadow-sm xl:sticky xl:top-4 xl:self-start">
           {selectedProject ? (
             <>
-              <div className="mb-4 flex aspect-[4/3] items-center justify-center rounded-xl border border-blue-100 bg-slate-50">
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl text-base font-bold" style={{ background: "#DBEAFE", color: "#1D4ED8" }}>
+              <div className="mb-3 flex aspect-[16/11] items-center justify-center rounded-xl border border-blue-100 bg-slate-50">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl text-sm font-bold" style={{ background: "#DBEAFE", color: "#1D4ED8" }}>
                   {getProjectInitials(selectedProject.title)}
                 </div>
               </div>
 
-              <p className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">Details du projet</p>
-              <h3 className="mt-1 text-xl font-semibold tracking-tight text-slate-900">{selectedProject.title}</h3>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">Details du projet</p>
+              <h3 className="mt-1 text-lg font-semibold tracking-tight text-slate-900">{selectedProject.title}</h3>
 
-              <div className="mt-4 space-y-3 border-t border-blue-100 pt-4">
+              <div className="mt-3 space-y-2.5 border-t border-blue-100 pt-3">
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-400">Categorie</p>
-                  <p className="mt-1 text-sm text-slate-800">{selectedProject.categoryLabel}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-400">Categorie</p>
+                  <p className="mt-0.5 text-sm text-slate-800">{selectedProject.categoryLabel}</p>
                 </div>
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-400">Statut</p>
-                  <span className="mt-1 inline-flex rounded-full px-2.5 py-1 text-xs font-semibold" style={{ background: statusConfig[selectedProject.status].bg, color: statusConfig[selectedProject.status].color }}>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-400">Statut</p>
+                  <span className="mt-0.5 inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold" style={{ background: statusConfig[selectedProject.status].bg, color: statusConfig[selectedProject.status].color }}>
                     {statusConfig[selectedProject.status].label}
                   </span>
                 </div>
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-400">Date</p>
-                  <p className="mt-1 text-sm text-slate-800">{selectedProject.date}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-400">Date</p>
+                  <p className="mt-0.5 text-sm text-slate-800">{selectedProject.date}</p>
                 </div>
                 {selectedProject.featured ? (
-                  <div className="rounded-lg border border-yellow-200 bg-yellow-50 px-3 py-2 text-xs font-semibold text-yellow-700">
+                  <div className="rounded-lg border border-yellow-200 bg-yellow-50 px-2.5 py-1.5 text-[11px] font-semibold text-yellow-700">
                     Featured
                   </div>
                 ) : null}
               </div>
 
-              <div className="mt-4 flex items-center justify-center gap-2 border-t border-blue-100 pt-4">
+              <div className="mt-3 flex items-center justify-center gap-2 border-t border-blue-100 pt-3">
                 <Link
                   href={`/dashboard/projects/${selectedProject.id}`}
-                  className="flex h-10 w-10 items-center justify-center rounded-lg text-white transition hover:opacity-90"
+                  className="flex h-9 w-9 items-center justify-center rounded-lg text-white transition hover:opacity-90"
                   style={{ background: "#1D4ED8" }}
                   title="Voir"
                   aria-label="Voir le projet"
                 >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                     <circle cx="12" cy="12" r="3" />
                   </svg>
                 </Link>
                 <Link
                   href={`/dashboard/projects/${selectedProject.id}/edit`}
-                  className="flex h-10 w-10 items-center justify-center rounded-lg border border-blue-300 text-blue-700 transition hover:bg-blue-50"
+                  className="flex h-9 w-9 items-center justify-center rounded-lg border border-blue-300 text-blue-700 transition hover:bg-blue-50"
                   title="Modifier"
                   aria-label="Modifier le projet"
                 >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                   </svg>
@@ -494,11 +522,11 @@ export default function ProjectsPage() {
                 <button
                   type="button"
                   onClick={() => handleDeleteProject(selectedProject.id, selectedProject.title)}
-                  className="flex h-10 w-10 items-center justify-center rounded-lg border border-red-300 text-red-600 transition hover:bg-red-50"
+                  className="flex h-9 w-9 items-center justify-center rounded-lg border border-red-300 text-red-600 transition hover:bg-red-50"
                   title="Supprimer"
                   aria-label="Supprimer le projet"
                 >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <polyline points="3 6 5 6 21 6" />
                     <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
                     <line x1="10" y1="11" x2="10" y2="17" />

@@ -11,6 +11,7 @@ import { toast } from "sonner";
 interface QuickAction {
   label: string;
   message: string;
+  url?: string;
 }
 
 interface ChatbotService {
@@ -81,6 +82,7 @@ interface ChatbotSettingsData {
   chatbotPersonality: string;
   chatbotPrimaryColor: string;
   chatbotQuickActions: QuickAction[];
+  publicName?: string;
   publicTitle?: string;
   publicEmail?: string;
   publicPhone?: string;
@@ -166,46 +168,46 @@ function ChatbotPreview({ settings }: { settings: ChatbotSettingsData }) {
     .slice(0, 3);
 
   return (
-    <div className="sticky top-24">
-      <Card>
+    <div className="sticky top-24 max-w-[340px]">
+      <Card className="overflow-hidden rounded-[22px] border border-slate-200/70 bg-white text-slate-900 shadow-[0_20px_38px_rgba(37,99,235,0.12)]">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4" />
+          <CardTitle className="flex items-center gap-2 text-sm text-slate-900">
+            <Sparkles className="h-4 w-4 text-blue-300" />
             Previsualisation live
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-sm text-[var(--ui-text-secondary)]">
+        <CardContent className="space-y-3">
+          <p className="text-sm text-slate-500">
             Apercu du rendu final avec vos reglages
           </p>
 
           <div
-            className="overflow-hidden rounded-2xl border"
-            style={{ borderColor: "var(--ui-border)", background: "var(--ui-card)" }}
+            className="overflow-hidden rounded-[18px] border border-blue-100 shadow-[0_12px_26px_rgba(37,99,235,0.14)]"
+            style={{ background: "#ffffff" }}
           >
             <div
-              className="flex items-center justify-between px-4 py-3 text-white"
+              className="flex items-center justify-between px-3 py-2.5 text-white"
               style={{ background: `linear-gradient(135deg, ${settings.chatbotPrimaryColor}, ${withAlpha(settings.chatbotPrimaryColor, 0.9)})` }}
             >
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20">
+              <div className="flex items-center gap-2">
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-white/20">
                   <Bot className="h-4 w-4" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold">Assistant</p>
-                  <p className="text-[11px] text-white/80">En ligne</p>
+                  <p className="text-[13px] font-semibold leading-none">Assistant</p>
+                  <p className="mt-0.5 text-[10px] text-white/80">En ligne</p>
                 </div>
               </div>
               <div className="h-2 w-2 rounded-full bg-emerald-300" />
             </div>
 
-            <div className="space-y-3 p-4" style={{ background: "var(--ui-card)" }}>
+            <div className="space-y-2.5 p-3" style={{ background: "#eff6ff" }}>
               <div className="flex justify-start">
                 <div
                   className="max-w-[88%] rounded-2xl rounded-bl-md px-3 py-2"
-                  style={{ background: "var(--ui-input-bg)", color: "var(--ui-text)" }}
+                  style={{ background: "#ffffff", color: "#1e293b" }}
                 >
-                  <p className="text-sm leading-relaxed">{settings.chatbotWelcome || "Bonjour !"}</p>
+                  <p className="text-[13px] leading-relaxed">{settings.chatbotWelcome || "Bonjour !"}</p>
                 </div>
               </div>
 
@@ -214,20 +216,20 @@ function ChatbotPreview({ settings }: { settings: ChatbotSettingsData }) {
                   className="max-w-[75%] rounded-2xl rounded-br-md px-3 py-2 text-white"
                   style={{ background: settings.chatbotPrimaryColor }}
                 >
-                  <p className="text-sm leading-relaxed">Bonjour, j&apos;ai une question.</p>
+                  <p className="text-[13px] leading-relaxed">Bonjour, j&apos;ai une question.</p>
                 </div>
               </div>
 
               {quickActions.length > 0 ? (
-                <div className="flex flex-wrap gap-2 pt-1">
+                <div className="flex flex-wrap gap-1.5 pt-1">
                   {quickActions.map((action, idx) => (
                     <span
                       key={`${action.label}-${idx}`}
-                      className="rounded-full border px-2.5 py-1 text-xs"
+                      className="rounded-full border border-white/10 px-2.5 py-1 text-[11px]"
                       style={{
-                        borderColor: withAlpha(settings.chatbotPrimaryColor, 0.4),
-                        color: settings.chatbotPrimaryColor,
-                        background: withAlpha(settings.chatbotPrimaryColor, 0.08),
+                        borderColor: withAlpha(settings.chatbotPrimaryColor, 0.35),
+                        color: "#1e293b",
+                        background: withAlpha(settings.chatbotPrimaryColor, 0.16),
                       }}
                     >
                       {action.label}
@@ -237,14 +239,13 @@ function ChatbotPreview({ settings }: { settings: ChatbotSettingsData }) {
               ) : null}
             </div>
 
-            <div className="border-t p-3" style={{ borderColor: "var(--ui-border)", background: "var(--ui-card)" }}>
+            <div className="border-t border-blue-100 p-2.5" style={{ background: "#f8fafc" }}>
               <div className="flex items-center gap-2">
                 <div
-                  className="h-10 flex-1 rounded-full border px-3 text-sm"
+                  className="h-9 flex-1 rounded-full border border-blue-200 px-3 text-[12px]"
                   style={{
-                    borderColor: "var(--ui-border)",
-                    color: "var(--ui-text-muted)",
-                    background: "var(--ui-input-bg)",
+                    color: "#64748b",
+                    background: "#ffffff",
                     display: "flex",
                     alignItems: "center",
                   }}
@@ -252,8 +253,8 @@ function ChatbotPreview({ settings }: { settings: ChatbotSettingsData }) {
                   Ecrivez votre message...
                 </div>
                 <div
-                  className="flex h-10 w-10 items-center justify-center rounded-full text-white"
-                  style={{ background: settings.chatbotPrimaryColor }}
+                  className="flex h-9 w-9 items-center justify-center rounded-full text-white"
+                  style={{ background: `linear-gradient(135deg, ${settings.chatbotPrimaryColor}, ${withAlpha(settings.chatbotPrimaryColor, 0.9)})` }}
                 >
                   <Send className="h-4 w-4" />
                 </div>
@@ -261,8 +262,8 @@ function ChatbotPreview({ settings }: { settings: ChatbotSettingsData }) {
             </div>
           </div>
 
-          <div className="rounded-xl border p-3 text-xs" style={{ borderColor: "var(--ui-border)", color: "var(--ui-text-secondary)", background: "var(--ui-input-bg)" }}>
-            Personnalite: <span className="font-semibold" style={{ color: "var(--ui-text)" }}>{personalities.find((p) => p.value === settings.chatbotPersonality)?.label ?? "Amical"}</span>
+          <div className="rounded-xl border border-blue-100 p-3 text-xs text-slate-600" style={{ background: "#f8fafc" }}>
+            Personnalite: <span className="font-semibold text-slate-900">{personalities.find((p) => p.value === settings.chatbotPersonality)?.label ?? "Amical"}</span>
           </div>
         </CardContent>
       </Card>
@@ -279,6 +280,7 @@ export default function ChatbotSettingsPage() {
     chatbotPersonality: "friendly",
     chatbotPrimaryColor: "#3B82F6",
     chatbotQuickActions: [],
+    publicName: "",
     publicTitle: "",
     publicEmail: "",
     publicPhone: "",
@@ -592,7 +594,6 @@ export default function ChatbotSettingsPage() {
                 }
               >
                 <Eye className="h-4 w-4" />
-                Apercu
               </button>
               <Button onClick={saveSettings} disabled={saving}>
                 {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
@@ -719,14 +720,19 @@ export default function ChatbotSettingsPage() {
                 <CardContent className="space-y-3">
                   {settings.chatbotQuickActions.map((action, idx) => (
                     <div key={idx} className="space-y-2 p-3 rounded border" style={{ borderColor: "var(--ui-border)", background: "var(--ui-input-bg)" }}>
-                      <Input placeholder="Libelle" value={action.label} onChange={(e) => { const newActions = [...settings.chatbotQuickActions]; newActions[idx].label = e.target.value; setSettings({ ...settings, chatbotQuickActions: newActions }); }} />
-                      <Input placeholder="Message" value={action.message} onChange={(e) => { const newActions = [...settings.chatbotQuickActions]; newActions[idx].message = e.target.value; setSettings({ ...settings, chatbotQuickActions: newActions }); }} />
-                      <Button variant="ghost" size="sm" onClick={() => { setSettings({ ...settings, chatbotQuickActions: settings.chatbotQuickActions.filter((_, i) => i !== idx) }); }}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold" style={{ color: "var(--ui-text-secondary)" }}>Action {idx + 1}</span>
+                        <Button variant="ghost" size="sm" onClick={() => { setSettings({ ...settings, chatbotQuickActions: settings.chatbotQuickActions.filter((_, i) => i !== idx) }); }}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <Input placeholder="Libellé du bouton (ex: Voir mes projets)" value={action.label} onChange={(e) => { const newActions = [...settings.chatbotQuickActions]; newActions[idx].label = e.target.value; setSettings({ ...settings, chatbotQuickActions: newActions }); }} />
+                      <Input placeholder="Message envoyé au chatbot (ex: Je veux voir vos projets)" value={action.message} onChange={(e) => { const newActions = [...settings.chatbotQuickActions]; newActions[idx].message = e.target.value; setSettings({ ...settings, chatbotQuickActions: newActions }); }} />
+                      <Input placeholder="URL de redirection optionnelle (ex: /projects ou https://...)" value={action.url ?? ""} onChange={(e) => { const newActions = [...settings.chatbotQuickActions]; newActions[idx].url = e.target.value || undefined; setSettings({ ...settings, chatbotQuickActions: newActions }); }} />
+                      <p className="text-[10px]" style={{ color: "var(--ui-text-muted)" }}>Si une URL est définie, le bouton redirigera directement vers cette page.</p>
                     </div>
                   ))}
-                  <Button variant="outline" onClick={() => { setSettings({ ...settings, chatbotQuickActions: [...settings.chatbotQuickActions, { label: "", message: "" }] }); }}>
+                  <Button variant="outline" onClick={() => { setSettings({ ...settings, chatbotQuickActions: [...settings.chatbotQuickActions, { label: "", message: "", url: "" }] }); }}>
                     <Plus className="mr-2 h-4 w-4" />
                     Ajouter une action
                   </Button>
@@ -742,11 +748,31 @@ export default function ChatbotSettingsPage() {
                 <CardTitle>Informations personnelles</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <Input placeholder="Titre/Fonction" value={settings.publicTitle || ""} onChange={(e) => setSettings({ ...settings, publicTitle: e.target.value })} />
-                <Input type="email" placeholder="Email" value={settings.publicEmail || ""} onChange={(e) => setSettings({ ...settings, publicEmail: e.target.value })} />
-                <Input placeholder="Telephone" value={settings.publicPhone || ""} onChange={(e) => setSettings({ ...settings, publicPhone: e.target.value })} />
-                <Input placeholder="Localisation" value={settings.publicLocation || ""} onChange={(e) => setSettings({ ...settings, publicLocation: e.target.value })} />
-                <Input placeholder="Disponibilite" value={settings.publicAvailability || ""} onChange={(e) => setSettings({ ...settings, publicAvailability: e.target.value })} />
+                <div>
+                  <label className="text-xs font-semibold mb-1 block" style={{ color: "var(--ui-text-secondary)" }}>Votre nom <span className="text-red-500">*</span></label>
+                  <Input placeholder="Ex: Max Houngbedji" value={settings.publicName || ""} onChange={(e) => setSettings({ ...settings, publicName: e.target.value })} />
+                  <p className="text-[10px] mt-1" style={{ color: "var(--ui-text-muted)" }}>Le chatbot utilisera ce nom pour se présenter</p>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold mb-1 block" style={{ color: "var(--ui-text-secondary)" }}>Titre / Fonction</label>
+                  <Input placeholder="Ex: Designer & Développeur Frontend" value={settings.publicTitle || ""} onChange={(e) => setSettings({ ...settings, publicTitle: e.target.value })} />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold mb-1 block" style={{ color: "var(--ui-text-secondary)" }}>Email public</label>
+                  <Input type="email" placeholder="Ex: contact@maxhgd.com" value={settings.publicEmail || ""} onChange={(e) => setSettings({ ...settings, publicEmail: e.target.value })} />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold mb-1 block" style={{ color: "var(--ui-text-secondary)" }}>Téléphone</label>
+                  <Input placeholder="Ex: +229 97 00 00 00" value={settings.publicPhone || ""} onChange={(e) => setSettings({ ...settings, publicPhone: e.target.value })} />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold mb-1 block" style={{ color: "var(--ui-text-secondary)" }}>Localisation</label>
+                  <Input placeholder="Ex: Cotonou, Bénin" value={settings.publicLocation || ""} onChange={(e) => setSettings({ ...settings, publicLocation: e.target.value })} />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold mb-1 block" style={{ color: "var(--ui-text-secondary)" }}>Disponibilité</label>
+                  <Input placeholder="Ex: Disponible pour nouveaux projets" value={settings.publicAvailability || ""} onChange={(e) => setSettings({ ...settings, publicAvailability: e.target.value })} />
+                </div>
               </CardContent>
             </Card>
           )}

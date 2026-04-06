@@ -86,7 +86,13 @@ interface ChatbotSettingsPayload {
   chatbotWelcome: string;
   chatbotPersonality: string;
   chatbotPrimaryColor: string;
-  chatbotQuickActions: Array<{ label: string; message: string }>;
+  chatbotQuickActions: Array<{ label: string; message: string; url?: string }>;
+  publicName?: string;
+  publicTitle?: string;
+  publicEmail?: string;
+  publicPhone?: string;
+  publicLocation?: string;
+  publicAvailability?: string;
 }
 
 function cloneAccountState(state: AccountState): AccountState {
@@ -169,16 +175,17 @@ async function getFirstUserId(): Promise<string | null> {
   return user?.id ?? null;
 }
 
-function normalizeQuickActions(value: unknown): Array<{ label: string; message: string }> {
+function normalizeQuickActions(value: unknown): Array<{ label: string; message: string; url?: string }> {
   if (!Array.isArray(value)) return [];
   return value
     .filter(
-      (item): item is { label?: unknown; message?: unknown } =>
+      (item): item is { label?: unknown; message?: unknown; url?: unknown } =>
         !!item && typeof item === "object"
     )
     .map((item) => ({
       label: typeof item.label === "string" ? item.label : "",
       message: typeof item.message === "string" ? item.message : "",
+      ...(typeof item.url === "string" && item.url.trim() ? { url: item.url.trim() } : {}),
     }))
     .filter((item) => item.label.trim().length > 0 || item.message.trim().length > 0);
 }
@@ -205,6 +212,12 @@ async function getChatbotSettingsSnapshot(): Promise<ChatbotSettingsPayload> {
       chatbotPersonality: true,
       chatbotPrimaryColor: true,
       chatbotQuickActions: true,
+      publicName: true,
+      publicTitle: true,
+      publicEmail: true,
+      publicPhone: true,
+      publicLocation: true,
+      publicAvailability: true,
     },
   });
 
@@ -217,6 +230,12 @@ async function getChatbotSettingsSnapshot(): Promise<ChatbotSettingsPayload> {
     chatbotPersonality: settings?.chatbotPersonality ?? "friendly",
     chatbotPrimaryColor: settings?.chatbotPrimaryColor ?? "#3B82F6",
     chatbotQuickActions: normalizeQuickActions(settings?.chatbotQuickActions),
+    publicName: settings?.publicName ?? undefined,
+    publicTitle: settings?.publicTitle ?? undefined,
+    publicEmail: settings?.publicEmail ?? undefined,
+    publicPhone: settings?.publicPhone ?? undefined,
+    publicLocation: settings?.publicLocation ?? undefined,
+    publicAvailability: settings?.publicAvailability ?? undefined,
   };
 }
 
@@ -305,6 +324,12 @@ export async function PUT(request: Request) {
       chatbotPersonality,
       chatbotPrimaryColor,
       chatbotQuickActions,
+      publicName,
+      publicTitle,
+      publicEmail,
+      publicPhone,
+      publicLocation,
+      publicAvailability,
       ...otherFields
     } = body;
 
@@ -323,6 +348,12 @@ export async function PUT(request: Request) {
       chatbotPersonality: chatbotPersonality ?? "friendly",
       chatbotPrimaryColor: chatbotPrimaryColor ?? "#3B82F6",
       chatbotQuickActions: normalizeQuickActions(chatbotQuickActions),
+      ...(publicName !== undefined ? { publicName } : {}),
+      ...(publicTitle !== undefined ? { publicTitle } : {}),
+      ...(publicEmail !== undefined ? { publicEmail } : {}),
+      ...(publicPhone !== undefined ? { publicPhone } : {}),
+      ...(publicLocation !== undefined ? { publicLocation } : {}),
+      ...(publicAvailability !== undefined ? { publicAvailability } : {}),
     };
 
     await prisma.settings.upsert({

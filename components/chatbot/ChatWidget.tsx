@@ -20,10 +20,12 @@ interface Message {
 interface QuickAction {
   label: string;
   message: string;
+  url?: string;
 }
 
 interface ChatWidgetProps {
   enabled?: boolean;
+  botName?: string;
   welcomeMessage?: string;
   primaryColor?: string;
   quickActions?: QuickAction[];
@@ -31,6 +33,7 @@ interface ChatWidgetProps {
 
 export default function ChatWidget({
   enabled = true,
+  botName = 'Assistant',
   welcomeMessage =
     "Bonjour ! Je suis l'assistant de Max. Comment puis-je vous aider ?",
   primaryColor = '#3B82F6',
@@ -128,8 +131,22 @@ export default function ChatWidget({
   };
 
   const handleQuickAction = (action: QuickAction) => {
+    if (action.url) {
+      const url = action.url.trim();
+      if (url.startsWith('http')) {
+        window.open(url, '_blank', 'noopener,noreferrer');
+      } else {
+        window.location.href = url;
+      }
+      return;
+    }
     void sendMessage(action.message);
   };
+
+  const panelHeightClass =
+    messages.length <= 1
+      ? 'h-[min(340px,calc(100svh-5rem))]'
+      : 'h-[min(400px,calc(100svh-5rem))]';
 
   if (!enabled) return null;
 
@@ -143,10 +160,12 @@ export default function ChatWidget({
             exit={{ scale: 0, opacity: 0 }}
             onClick={() => setIsOpen(true)}
             aria-label="Ouvrir le chatbot"
-            className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-transform hover:scale-110"
-            style={{ backgroundColor: primaryColor }}
+            className="fixed bottom-4 right-4 z-50 flex h-11 w-11 items-center justify-center rounded-full shadow-[0_16px_30px_rgba(15,23,42,0.22)] ring-1 ring-white/20 transition-transform hover:scale-105"
+            style={{
+              background: `linear-gradient(135deg, ${primaryColor}, ${primaryColor}CC)`,
+            }}
           >
-            <MessageCircle className="h-6 w-6 text-white" />
+            <MessageCircle className="h-4.5 w-4.5 text-white" />
           </motion.button>
         )}
       </AnimatePresence>
@@ -157,36 +176,38 @@ export default function ChatWidget({
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="fixed bottom-6 right-6 z-50 flex h-[520px] w-[380px] flex-col overflow-hidden rounded-2xl border shadow-2xl"
+            className={`fixed bottom-4 right-3 sm:right-4 z-50 flex ${panelHeightClass} w-[calc(100vw-1.2rem)] max-w-[320px] flex-col overflow-hidden rounded-[22px] border shadow-[0_24px_60px_rgba(15,23,42,0.28)] backdrop-blur-xl`}
             style={{
-              borderColor: "var(--ui-border)",
-              background: "var(--ui-card)",
+              borderColor: "rgba(148,163,184,0.18)",
+              background: "linear-gradient(180deg, rgba(15,23,42,0.92) 0%, rgba(15,23,42,0.98) 100%)",
               color: "var(--ui-text)",
             }}
           >
             <div
-              className="flex items-center justify-between p-4 text-white"
-              style={{ backgroundColor: primaryColor }}
+              className="flex items-center justify-between border-b border-white/10 p-3 text-white"
+              style={{
+                background: `linear-gradient(135deg, ${primaryColor}, ${primaryColor}DD)`,
+              }}
             >
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20">
-                  <Bot className="h-5 w-5" />
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15 ring-1 ring-white/20">
+                  <Bot className="h-4 w-4" />
                 </div>
                 <div>
-                  <h3 className="font-semibold">Assistant Max</h3>
-                  <p className="text-xs text-white/80">En ligne</p>
+                  <h3 className="text-[13px] font-semibold leading-none">{botName}</h3>
+                  <p className="mt-0.5 text-[11px] text-white/80">En ligne</p>
                 </div>
               </div>
               <button
                 onClick={() => setIsOpen(false)}
                 aria-label="Fermer le chatbot"
-                className="flex h-11 w-11 items-center justify-center rounded-full transition-colors hover:bg-white/20"
+                className="flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:bg-white/15"
               >
-                <X className="h-5 w-5" />
+                <X className="h-4.5 w-4.5" />
               </button>
             </div>
 
-            <div className="flex-1 space-y-4 overflow-y-auto p-4">
+            <div className="flex-1 space-y-2 overflow-y-auto px-3 pt-3 pb-2">
               {messages.map((message) => (
                 <div
                   key={message.id}
@@ -194,9 +215,9 @@ export default function ChatWidget({
                     message.role === 'user' ? 'justify-end' : 'justify-start'
                   }`}
                 >
-                  <div className="max-w-[85%]">
+                  <div className="max-w-[88%]">
                     <div
-                      className={`rounded-2xl px-4 py-2.5 ${
+                      className={`rounded-2xl px-3 py-2 ${
                         message.role === 'user'
                           ? 'rounded-br-md text-white'
                           : 'rounded-bl-md'
@@ -204,33 +225,31 @@ export default function ChatWidget({
                       style={
                         message.role === 'user'
                           ? { backgroundColor: primaryColor }
-                          : { background: 'var(--ui-input-bg)', color: 'var(--ui-text)' }
+                          : { background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.92)' }
                       }
                     >
-                      <p className="whitespace-pre-wrap text-sm">{message.content}</p>
+                      <p className="whitespace-pre-wrap text-[13px] leading-relaxed">{message.content}</p>
                     </div>
 
                     {message.actions && message.actions.length > 0 && (
-                      <div className="mt-2 flex flex-wrap gap-2">
+                      <div className="mt-2 flex flex-wrap gap-1.5">
                         {message.actions.map((action, index) => (
                           <a
                             key={index}
                             href={action.url}
                             target={action.url.startsWith('http') ? '_blank' : '_self'}
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors"
+                            aria-label={`Ouvrir l'action ${action.label}`}
+                            className="inline-flex items-center gap-1 rounded-full border border-white/10 px-2.5 py-1 text-[11px] font-medium text-white transition-colors"
                             style={{
-                              borderColor: primaryColor,
-                              color: primaryColor,
-                              backgroundColor: 'transparent',
+                              borderColor: 'rgba(255,255,255,0.12)',
+                              background: 'rgba(255,255,255,0.08)',
                             }}
                             onMouseEnter={(e) => {
-                              e.currentTarget.style.backgroundColor = primaryColor;
-                              e.currentTarget.style.color = 'white';
+                              e.currentTarget.style.background = 'rgba(255,255,255,0.14)';
                             }}
                             onMouseLeave={(e) => {
-                              e.currentTarget.style.backgroundColor = 'transparent';
-                              e.currentTarget.style.color = primaryColor;
+                              e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
                             }}
                           >
                             {action.label}
@@ -245,13 +264,37 @@ export default function ChatWidget({
                 </div>
               ))}
 
+              {messages.length <= 1 && quickActions.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {quickActions.map((action, index) => (
+                    <button
+                      key={`${action.label}-${index}`}
+                      onClick={() => handleQuickAction(action)}
+                      aria-label={`Action rapide: ${action.label}`}
+                      className="rounded-full border border-white/10 px-2.5 py-1 text-[11px] font-medium text-white transition-colors"
+                      style={{
+                        background: 'rgba(255,255,255,0.08)',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'rgba(255,255,255,0.14)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
+                      }}
+                    >
+                      {action.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+
               {isLoading && (
                 <div className="flex justify-start">
-                  <div className="rounded-2xl rounded-bl-md px-4 py-3" style={{ background: 'var(--ui-input-bg)' }}>
+                  <div className="rounded-2xl rounded-bl-md px-3 py-2.5" style={{ background: 'rgba(255,255,255,0.06)' }}>
                     <div className="flex gap-2">
-                      <Loader2 className="h-4 w-4 animate-spin" style={{ color: 'var(--ui-text-muted)' }} />
-                      <span className="text-xs" style={{ color: 'var(--ui-text-muted)' }}>
-                        Assistant en train d\'ecrire...
+                      <Loader2 className="h-4 w-4 animate-spin text-white/60" />
+                      <span className="text-[11px] text-white/60">
+                        Assistant en train d&apos;ecrire...
                       </span>
                     </div>
                   </div>
@@ -261,38 +304,9 @@ export default function ChatWidget({
               <div ref={messagesEndRef} />
             </div>
 
-            {messages.length <= 1 && quickActions.length > 0 && (
-              <div className="px-4 pb-2">
-                <div className="flex flex-wrap gap-2">
-                  {quickActions.map((action, index) => (
-                    <button
-                      key={`${action.label}-${index}`}
-                      onClick={() => handleQuickAction(action)}
-                      aria-label={`Action rapide: ${action.label}`}
-                      className="rounded-full border px-3 py-2 text-xs font-medium text-white transition-colors"
-                      style={{
-                        borderColor: primaryColor,
-                        backgroundColor: primaryColor,
-                        color: '#ffffff',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.opacity = '0.9';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.opacity = '1';
-                      }}
-                    >
-                      {action.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
             <form
               onSubmit={handleSubmit}
-              className="border-t p-4"
-              style={{ borderColor: 'var(--ui-border)' }}
+              className="border-t border-white/10 p-2.5"
             >
               <div className="flex gap-2">
                 <input
@@ -303,19 +317,18 @@ export default function ChatWidget({
                   onChange={(e) => setInput(e.target.value)}
                   placeholder="Ecrivez votre message..."
                   disabled={isLoading}
-                  className="h-11 flex-1 rounded-full border px-4 transition-colors focus:outline-none"
+                  className="h-9 flex-1 rounded-full border border-white/10 px-3 text-[12px] transition-colors focus:outline-none"
                   style={{
-                    borderColor: 'var(--ui-border)',
-                    background: 'var(--ui-input-bg)',
-                    color: 'var(--ui-text)',
+                    background: 'rgba(255,255,255,0.06)',
+                    color: 'rgba(255,255,255,0.92)',
                   }}
                 />
                 <button
                   type="submit"
                   aria-label="Envoyer le message"
                   disabled={!input.trim() || isLoading}
-                  className="flex h-11 w-11 items-center justify-center rounded-full text-white transition-colors disabled:opacity-50"
-                  style={{ backgroundColor: primaryColor }}
+                  className="flex h-9 w-9 items-center justify-center rounded-full text-white transition-colors disabled:opacity-50"
+                  style={{ background: `linear-gradient(135deg, ${primaryColor}, ${primaryColor}D0)` }}
                 >
                   {isLoading ? (
                     <Loader2 className="h-5 w-5 animate-spin" />

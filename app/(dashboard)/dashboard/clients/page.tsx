@@ -186,18 +186,18 @@ function ClientsContent() {
   const selectedClient = filteredClients.find((client) => client.id === selectedClientId) ?? filteredClients[0] ?? null;
 
   return (
-    <div className="flex flex-col gap-5">
-      <div className="rounded-[26px] border border-blue-100 bg-blue-50 p-4 sm:p-5 lg:p-6" style={{ animation: "fadeSlideUp 320ms ease-out both" }}>
-        <div className="flex flex-wrap items-start justify-between gap-3">
+    <div className="flex flex-col gap-3">
+      <div className="rounded-2xl border border-blue-100 bg-blue-50 p-3 sm:p-4" style={{ animation: "fadeSlideUp 320ms ease-out both" }}>
+        <div className="flex flex-wrap items-start justify-between gap-2">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-blue-700">Client management</p>
-            <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">Base clients</h1>
-            <p className="mt-1 text-sm text-slate-600">{clients.length} clients suivis actuellement</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-blue-700">Client management</p>
+            <h1 className="mt-0.5 text-lg font-semibold tracking-tight text-slate-900">Base clients</h1>
+            <p className="mt-0.5 text-xs text-slate-600">{clients.length} clients suivis actuellement</p>
           </div>
           <button
             type="button"
             onClick={() => setIsCreatePanelOpen(true)}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-blue-700 px-4 py-2 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(37,99,235,0.35)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-800"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-blue-700 px-3 py-1.5 text-xs font-semibold text-white shadow-[0_4px_12px_rgba(37,99,235,0.35)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-800"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="12" y1="5" x2="12" y2="19" />
@@ -207,22 +207,22 @@ function ClientsContent() {
           </button>
         </div>
 
-        <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4" style={{ animation: "fadeSlideUp 420ms ease-out both" }}>
-          <div className="rounded-xl border border-blue-100 bg-blue-50/70 px-3 py-2">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-blue-700">Total</p>
-            <p className="mt-0.5 text-base font-semibold text-slate-900">{clients.length}</p>
+        <div className="mt-3 grid grid-cols-2 gap-1.5 sm:grid-cols-4" style={{ animation: "fadeSlideUp 420ms ease-out both" }}>
+          <div className="rounded-lg border border-blue-100 bg-blue-50/70 px-2.5 py-1.5">
+            <p className="text-[9px] font-semibold uppercase tracking-[0.08em] text-blue-700">Total</p>
+            <p className="mt-0.5 text-sm font-semibold text-slate-900">{clients.length}</p>
           </div>
-          <div className="rounded-xl border border-blue-100 bg-blue-50/70 px-3 py-2">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-blue-700">Actifs</p>
-            <p className="mt-0.5 text-base font-semibold text-slate-900">{activeCount}</p>
+          <div className="rounded-lg border border-blue-100 bg-blue-50/70 px-2.5 py-1.5">
+            <p className="text-[9px] font-semibold uppercase tracking-[0.08em] text-blue-700">Actifs</p>
+            <p className="mt-0.5 text-sm font-semibold text-slate-900">{activeCount}</p>
           </div>
-          <div className="rounded-xl border border-blue-100 bg-blue-50/70 px-3 py-2">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-blue-700">Leads</p>
-            <p className="mt-0.5 text-base font-semibold text-slate-900">{leadCount}</p>
+          <div className="rounded-lg border border-blue-100 bg-blue-50/70 px-2.5 py-1.5">
+            <p className="text-[9px] font-semibold uppercase tracking-[0.08em] text-blue-700">Leads</p>
+            <p className="mt-0.5 text-sm font-semibold text-slate-900">{leadCount}</p>
           </div>
-          <div className="rounded-xl border border-blue-100 bg-blue-50/70 px-3 py-2">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-blue-700">Completes</p>
-            <p className="mt-0.5 text-base font-semibold text-slate-900">{completedCount}</p>
+          <div className="rounded-lg border border-blue-100 bg-blue-50/70 px-2.5 py-1.5">
+            <p className="text-[9px] font-semibold uppercase tracking-[0.08em] text-blue-700">Completes</p>
+            <p className="mt-0.5 text-sm font-semibold text-slate-900">{completedCount}</p>
           </div>
         </div>
 

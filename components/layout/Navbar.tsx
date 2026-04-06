@@ -44,7 +44,7 @@ export default function Navbar() {
 
   useEffect(() => {
     const onResize = () => {
-      if (window.innerWidth >= 768) setMenuOpen(false);
+      if (window.innerWidth >= 1024) setMenuOpen(false);
     };
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
@@ -94,7 +94,7 @@ export default function Navbar() {
     const id = href.replace("#", "");
     const isActive = derivedSection === id;
     return [
-      "px-3 py-1.5 rounded-full text-sm transition-colors duration-200",
+      "px-2.5 xl:px-3 py-1.5 rounded-full text-xs xl:text-sm transition-colors duration-200",
       isActive ? "text-white font-medium" : "text-neutral-400 hover:text-white",
     ].join(" ");
   };
@@ -111,10 +111,10 @@ export default function Navbar() {
   };
 
   return (
-    <header className="fixed top-4 left-0 right-0 z-50 flex justify-center px-4">
+    <header className="fixed top-3 sm:top-4 left-0 right-0 z-50 flex justify-center px-3 sm:px-4">
       <nav
         className={[
-          "hidden md:flex items-center rounded-full px-6 gap-2 transition-all duration-500",
+          "hidden lg:flex items-center rounded-full px-4 xl:px-6 gap-1.5 xl:gap-2 transition-all duration-500",
           scrolled
             ? "bg-neutral-900 py-2"
             : "bg-neutral-900/75 py-3 backdrop-blur-md",
@@ -142,7 +142,7 @@ export default function Navbar() {
 
       <div
         className={[
-          "flex md:hidden items-center justify-between w-full rounded-full px-5 transition-all duration-500",
+          "flex lg:hidden items-center justify-between w-full rounded-full px-4 sm:px-5 transition-all duration-500",
           scrolled
             ? "bg-neutral-900 py-2.5"
             : "bg-neutral-900/75 py-3 backdrop-blur-md",
@@ -182,7 +182,7 @@ export default function Navbar() {
       </div>
 
       {menuOpen && (
-        <div className="animate-slide-down absolute top-full mt-2 left-4 right-4 bg-neutral-900 rounded-2xl overflow-hidden md:hidden border border-white/5">
+        <div className="animate-slide-down absolute top-full mt-2 left-3 right-3 sm:left-4 sm:right-4 bg-neutral-900 rounded-2xl overflow-hidden lg:hidden border border-white/5">
           <ul className="flex flex-col py-2">
             {allLinks.map((link) => (
               <li key={link.href}>

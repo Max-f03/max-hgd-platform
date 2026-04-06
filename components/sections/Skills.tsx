@@ -60,16 +60,16 @@ const categories: SkillCategory[] = [
 
 export default function Skills() {
   return (
-    <section id="skills" className="py-16 lg:py-20 px-4">
-      <div className="max-w-5xl mx-auto flex flex-col gap-12">
+    <section id="skills" className="py-16 sm:py-20 lg:py-24 px-4 bg-neutral-50">
+      <div className="max-w-5xl mx-auto flex flex-col gap-10 sm:gap-12 lg:gap-14">
         <Reveal>
-          <div className="flex flex-col gap-3 text-center">
+          <div className="flex flex-col gap-4 text-center">
             <div className="flex justify-center">
               <span className="px-4 py-1.5 rounded-full bg-primary-50 text-primary-600 text-xs font-semibold tracking-widest uppercase">
                 Competences
               </span>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-medium text-neutral-900">
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-medium text-neutral-900">
               Ce que je sais faire
             </h2>
             <p className="text-neutral-500 max-w-xl mx-auto text-sm leading-relaxed">
@@ -79,7 +79,7 @@ export default function Skills() {
           </div>
         </Reveal>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5 sm:gap-6 lg:gap-8">
           {categories.map((category, index) => (
             <Reveal key={category.title} delay={(index * 100) as 0 | 100 | 200}>
             <Card className="flex flex-col gap-5 h-full">
@@ -87,7 +87,7 @@ export default function Skills() {
                 <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary-50 text-primary-500">
                   {category.icon}
                 </div>
-                <h3 className="font-medium text-neutral-900 text-sm">
+                <h3 className="font-medium text-neutral-900 text-sm sm:text-base">
                   {category.title}
                 </h3>
               </div>
