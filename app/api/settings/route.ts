@@ -188,6 +188,7 @@ async function getChatbotSettingsSnapshot(): Promise<ChatbotSettingsPayload> {
   if (!firstUserId) {
     return {
       chatbotEnabled: true,
+      chatbotUseAI: true,
       chatbotWelcome: "Bonjour ! Je suis l'assistant de Max. Comment puis-je vous aider ?",
       chatbotPersonality: "friendly",
       chatbotPrimaryColor: "#3B82F6",
