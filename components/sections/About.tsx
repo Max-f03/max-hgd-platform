@@ -1,4 +1,5 @@
 import Reveal from "@/components/ui/Reveal";
+import Image from "next/image";
 
 export default function About() {
   return (
@@ -7,11 +8,15 @@ export default function About() {
         <Reveal variant="left">
           <div className="relative">
             <div className="relative aspect-[4/5] w-full max-w-xs sm:max-w-sm mx-auto md:mx-0 rounded-3xl overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary-100 to-primary-300" />
+              <Image
+                src="/image/Image1.jpeg"
+                alt="Portrait de Max"
+                fill
+                sizes="(min-width: 1024px) 384px, (min-width: 768px) 40vw, 80vw"
+                className="object-cover"
+                priority
+              />
               <div className="absolute -bottom-2 -right-2 w-full h-full rounded-3xl border-4 border-primary-500 -z-10" />
-              <div className="w-full h-full flex items-center justify-center text-primary-500 text-6xl font-bold">
-                MH
-              </div>
             </div>
           </div>
         </Reveal>

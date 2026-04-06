@@ -43,8 +43,8 @@ const conversations: Conversation[] = [
     time: "il y a 2h",
     unread: true,
     unreadMessages: 3,
-    avatarBg: "#DBEAFE",
-    avatarText: "#1D4ED8",
+    avatarBg: "var(--ui-status-info-bg)",
+    avatarText: "var(--ui-status-info-text)",
     sharedMedia: ["brief-projet.pdf", "wireframe-home.png", "plan-sprint.docx"],
     messages: [
       { id: "1-1", from: "them", text: "Bonjour, j'aimerais discuter du projet e-commerce. Quand etes-vous disponible ?", time: "10:32", kind: "text" },
@@ -63,8 +63,8 @@ const conversations: Conversation[] = [
     time: "hier",
     unread: false,
     unreadMessages: 0,
-    avatarBg: "#DBEAFE",
-    avatarText: "#1D4ED8",
+    avatarBg: "var(--ui-status-info-bg)",
+    avatarText: "var(--ui-status-info-text)",
     sharedMedia: ["logo-final.svg", "charte-couleurs.pdf"],
     messages: [
       { id: "2-1", from: "them", text: "Bonjour, je voulais vous remercier pour la livraison du design system. Tout est parfait !", time: "15:20", kind: "text" },
@@ -82,8 +82,8 @@ const conversations: Conversation[] = [
     time: "il y a 3j",
     unread: true,
     unreadMessages: 1,
-    avatarBg: "#DBEAFE",
-    avatarText: "#1E40AF",
+    avatarBg: "var(--ui-status-info-bg)",
+    avatarText: "var(--ui-status-info-text)",
     sharedMedia: ["maquette-v3.fig"],
     messages: [
       { id: "3-1", from: "them", text: "Bonjour, pouvez-vous nous envoyer la derniere version des maquettes pour validation ?", time: "09:15", kind: "text" },
@@ -119,10 +119,10 @@ function TickMarks({ status }: { status?: MessageStatus }) {
   if (!status) return null;
 
   if (status === "sent") {
-    return <span style={{ color: "rgba(255,255,255,0.82)" }}>✓</span>;
+    return <span style={{ color: "var(--ui-text-muted)" }}>✓</span>;
   }
 
-  const color = status === "read" ? "#93C5FD" : "rgba(255,255,255,0.82)";
+  const color = status === "read" ? "var(--ui-primary)" : "var(--ui-text-muted)";
   return (
     <span className="inline-flex">
       <span style={{ color }}>{"\u2713"}</span>
@@ -637,8 +637,8 @@ export default function MessagesPage() {
                         style={{
                           borderRadius: msg.from === "me" ? "18px 18px 6px 18px" : "18px 18px 18px 6px",
                           ...(msg.from === "me"
-                            ? { background: "#DBEAFE", color: "#334155", borderColor: "#BFDBFE" }
-                            : { background: "#FFFFFF", color: "#334155", borderColor: "#ECECEC" }),
+                            ? { background: "var(--ui-status-info-bg)", color: "var(--ui-status-info-text)", borderColor: "var(--ui-border)" }
+                            : { background: "var(--ui-card)", color: "var(--ui-text-secondary)", borderColor: "var(--ui-border)" }),
                         }}
                       >
                         <p className="leading-relaxed whitespace-pre-line">{msg.text}</p>

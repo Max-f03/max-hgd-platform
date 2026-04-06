@@ -5,7 +5,7 @@ const data = [
 ];
 
 const svgWidth = 600;
-const svgHeight = 132;
+const svgHeight = 220;
 const paddingLeft = 40;
 const paddingRight = 16;
 const paddingTop = 16;
@@ -62,9 +62,13 @@ const xLabels = [
 
 const lastPt = pts[pts.length - 1];
 
-export default function ChartLine() {
+type ChartLineProps = {
+  height?: number;
+};
+
+export default function ChartLine({ height = 260 }: ChartLineProps) {
   return (
-    <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} width="100%" aria-label="Vues sur 30 jours">
+    <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} width="100%" height={height} aria-label="Vues sur 30 jours">
       <defs>
         <linearGradient id="lineAreaGradient" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#2563EB" stopOpacity="0.22" />

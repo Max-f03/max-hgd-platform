@@ -143,9 +143,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <NavigationBar />
 
       {liveNotifToast ? (
-        <div className="fixed right-6 top-18 z-50 rounded-xl border border-blue-100 bg-white px-4 py-3 shadow-lg animate-fade-in">
-          <p className="text-xs font-semibold uppercase tracking-[0.08em] text-blue-700">Notification</p>
-          <p className="mt-0.5 text-sm font-semibold text-slate-900">{liveNotifToast}</p>
+        <div className="fixed right-6 top-18 z-50 rounded-xl border border-blue-100 bg-white px-4 py-3 shadow-lg animate-fade-in dark:border-slate-700 dark:bg-slate-900">
+          <p className="text-xs font-semibold uppercase tracking-[0.08em] text-blue-700 dark:text-blue-300">Notification</p>
+          <p className="mt-0.5 text-sm font-semibold text-slate-900 dark:text-slate-100">{liveNotifToast}</p>
         </div>
       ) : null}
 
@@ -179,7 +179,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
           {/* Titre */}
           <div className="flex items-center gap-2">
-            <span className="hidden md:inline-flex text-[11px] font-semibold uppercase tracking-[0.12em] px-2 py-1 rounded-full" style={{ color: "#1E40AF", background: "#DBEAFE" }}>
+            <span
+              className="hidden md:inline-flex text-[11px] font-semibold uppercase tracking-[0.12em] px-2 py-1 rounded-full"
+              style={{ color: "var(--d-badge-c)", background: "var(--d-badge-bg)" }}
+            >
               Console
             </span>
             <h1 className="text-sm font-semibold" style={{ color: "var(--d-t1)" }}>{pageTitle}</h1>

@@ -51,13 +51,11 @@ type PlatformVersion = {
   uiState: StableSnapshot | null;
 };
 
-const APPLIED_DEPLOYMENT_VERSION_KEY = "admin-applied-deployment-version";
-
 const inputStyle: React.CSSProperties = {
-  background: "#F8FAFC",
-  border: "1.5px solid #DBEAFE",
+  background: "var(--ui-input-bg)",
+  border: "1.5px solid var(--ui-border)",
   borderRadius: "8px",
-  color: "#0F172A",
+  color: "var(--ui-text)",
   fontSize: "14px",
   outline: "none",
   padding: "10px 14px",
@@ -68,13 +66,13 @@ const inputStyle: React.CSSProperties = {
 function useInputFocus() {
   return {
     onFocus: (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-      e.currentTarget.style.background = "#FFFFFF";
-      e.currentTarget.style.borderColor = "#3B82F6";
+      e.currentTarget.style.background = "var(--ui-card)";
+      e.currentTarget.style.borderColor = "var(--ui-primary)";
       e.currentTarget.style.boxShadow = "none";
     },
     onBlur: (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-      e.currentTarget.style.background = "#F8FAFC";
-      e.currentTarget.style.borderColor = "#DBEAFE";
+      e.currentTarget.style.background = "var(--ui-input-bg)";
+      e.currentTarget.style.borderColor = "var(--ui-border)";
       e.currentTarget.style.boxShadow = "none";
     },
   };
@@ -86,7 +84,14 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 
 function SettingCard({ children, className = "", style }: { children: React.ReactNode; className?: string; style?: React.CSSProperties }) {
   return (
-    <div className={`rounded-2xl border border-blue-100 bg-white ${className}`} style={style}>
+    <div
+      className={`rounded-2xl border ${className}`}
+      style={{
+        background: "var(--ui-card)",
+        borderColor: "var(--ui-border)",
+        ...style,
+      }}
+    >
       {children}
     </div>
   );
@@ -114,9 +119,6 @@ export default function SettingsPage() {
   const [activeSection, setActiveSection] = useState<Section>("profile");
   const [stableSavedAt, setStableSavedAt] = useState<string | null>(null);
   const [versionHistory, setVersionHistory] = useState<PlatformVersion[]>([]);
-  const [latestDeploymentVersion, setLatestDeploymentVersion] = useState<string | null>(null);
-  const [appliedDeploymentVersion, setAppliedDeploymentVersion] = useState<string | null>(null);
-  const [hasDeploymentUpdate, setHasDeploymentUpdate] = useState(false);
   const focus = useInputFocus();
 
   const [profileForm, setProfileForm] = useState({
@@ -155,30 +157,6 @@ export default function SettingsPage() {
       setVersionHistory(versions);
       const activeVersion = versions.find((version) => version.isActive);
       setStableSavedAt(activeVersion?.savedAt ?? versions[0]?.savedAt ?? null);
-    } catch {
-      // Ignore temporary network errors.
-    }
-  }
-
-  async function loadDeploymentStatus() {
-    try {
-      const response = await fetch("/api/settings?action=deploymentStatus", { cache: "no-store" });
-      if (!response.ok) return;
-      const data = (await response.json()) as { latestDeploymentVersion?: string };
-      if (!data.latestDeploymentVersion) return;
-
-      setLatestDeploymentVersion(data.latestDeploymentVersion);
-
-      const storedAppliedVersion = window.localStorage.getItem(APPLIED_DEPLOYMENT_VERSION_KEY);
-      if (!storedAppliedVersion) {
-        window.localStorage.setItem(APPLIED_DEPLOYMENT_VERSION_KEY, data.latestDeploymentVersion);
-        setAppliedDeploymentVersion(data.latestDeploymentVersion);
-        setHasDeploymentUpdate(false);
-        return;
-      }
-
-      setAppliedDeploymentVersion(storedAppliedVersion);
-      setHasDeploymentUpdate(storedAppliedVersion !== data.latestDeploymentVersion);
     } catch {
       // Ignore temporary network errors.
     }
@@ -250,7 +228,6 @@ export default function SettingsPage() {
     void loadAccount();
     void loadNotificationEmail();
     void loadVersionHistory();
-    void loadDeploymentStatus();
   }, []);
 
   function buildSnapshot(): StableSnapshot {
@@ -271,8 +248,9 @@ export default function SettingsPage() {
         body: JSON.stringify({ action: "createVersion", uiState: snapshot, makeActive }),
       });
       if (!response.ok) {
+        const payload = (await response.json().catch(() => ({}))) as { error?: string };
         if (!silent) {
-          flash("error", "Impossible d'enregistrer la version plateforme.");
+          flash("error", payload.error ?? "Impossible d'enregistrer la version plateforme.");
         }
         return;
       }
@@ -289,17 +267,14 @@ export default function SettingsPage() {
   }
 
   async function applyLatestDeployment() {
-    if (!latestDeploymentVersion) {
-      flash("error", "Version distante indisponible pour le moment.");
+    const latestNonActiveVersion = versionHistory.find((version) => !version.isActive);
+    if (!latestNonActiveVersion) {
+      flash("error", "Aucune nouvelle version a appliquer.");
       return;
     }
 
-    await saveUiVersion({ silent: true, makeActive: false });
-    window.localStorage.setItem(APPLIED_DEPLOYMENT_VERSION_KEY, latestDeploymentVersion);
-    setAppliedDeploymentVersion(latestDeploymentVersion);
-    setHasDeploymentUpdate(false);
-    flash("success", "Mise a jour appliquee. Rechargement...");
-    setTimeout(() => window.location.reload(), 700);
+    await restoreVersionById(latestNonActiveVersion.id);
+    flash("success", "Version appliquee.");
   }
 
   function applyUiSnapshot(snapshot: StableSnapshot | null, fallbackSection: Section = "profile") {
@@ -557,6 +532,9 @@ export default function SettingsPage() {
   ];
   const completionPercent = Math.round((completionChecks.filter(Boolean).length / completionChecks.length) * 100);
   const activeNotifications = [prefs.emailNotifications, prefs.projectUpdates, prefs.weeklyReport, prefs.messageAlerts].filter(Boolean).length;
+  const currentVersion = versionHistory.find((version) => version.isActive) ?? null;
+  const availableVersion = versionHistory.find((version) => !version.isActive) ?? null;
+  const archivedVersionCount = versionHistory.filter((version) => !version.isActive && version.id !== availableVersion?.id).length;
 
   return (
     <div className="flex flex-col gap-5" style={{ animation: "fadeSlideUp 260ms ease-out both" }}>
@@ -598,7 +576,7 @@ export default function SettingsPage() {
         </div>
 
         <div className="mt-4 flex flex-wrap gap-2">
-          <button type="button" onClick={handleExportData} className="inline-flex items-center rounded-lg border border-blue-100 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-blue-50">
+          <button type="button" onClick={handleExportData} className="inline-flex items-center rounded-lg border border-blue-100 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-blue-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800">
             Exporter
           </button>
         </div>
@@ -617,8 +595,8 @@ export default function SettingsPage() {
       )}
 
       <div className="grid grid-cols-1 gap-4" style={{ animation: "fadeSlideUp 520ms ease-out both" }}>
-        <div className="rounded-2xl border border-blue-100 bg-white p-4 sm:p-5">
-          <div className="rounded-xl border border-blue-100 bg-white p-3">
+        <div className="rounded-2xl border border-blue-100 bg-white p-4 sm:p-5 dark:border-slate-700 dark:bg-slate-900/70">
+          <div className="rounded-xl border border-blue-100 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
             <div className="mb-2 flex items-center justify-between gap-2">
               <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">Navigation des sections</p>
               <span className="inline-flex h-6 items-center rounded-full border border-blue-100 bg-blue-50 px-2 text-[11px] font-semibold text-blue-700">
@@ -743,7 +721,7 @@ export default function SettingsPage() {
                   <select
                     value={prefs.language}
                     onChange={(e) => setPrefs((p) => ({ ...p, language: e.target.value }))}
-                    className="h-10 rounded-lg border border-blue-100 bg-slate-50 px-3 text-sm text-slate-700 outline-none transition focus:border-blue-400 focus:bg-white focus:ring-4 focus:ring-blue-500/15"
+                    className="h-10 rounded-lg border border-blue-100 bg-slate-50 px-3 text-sm text-slate-700 outline-none transition focus:border-blue-400 focus:bg-white focus:ring-4 focus:ring-blue-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:bg-slate-900"
                   >
                     <option value="fr">Francais</option>
                     <option value="en">English</option>
@@ -756,17 +734,17 @@ export default function SettingsPage() {
             )}
 
             {activeSection === "danger" && (
-              <SettingCard className="p-5 sm:p-6 space-y-3" style={{ borderColor: "#FECACA" }}>
+              <SettingCard className="p-5 sm:p-6 space-y-3 border-red-200 dark:border-red-900/50">
                 <SectionTitle>Zone dangereuse</SectionTitle>
-                <p className="text-xs text-red-700">Ces actions sont definitives et irreversibles.</p>
+                <p className="text-xs text-red-700 dark:text-red-300">Ces actions sont definitives et irreversibles.</p>
                 <div className="space-y-2 pt-2">
-                  <div className="flex items-center justify-between rounded-lg border border-blue-100 bg-slate-50 p-3">
+                  <div className="flex items-center justify-between rounded-lg border border-blue-100 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900">
                     <div><p className="text-sm font-medium text-slate-900">Exporter les donnees</p><p className="text-xs text-slate-500">Telecharger vos donnees en JSON</p></div>
-                    <button type="button" onClick={handleExportData} className="rounded-xl border border-blue-100 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-blue-50">Exporter</button>
+                    <button type="button" onClick={handleExportData} className="rounded-xl border border-blue-100 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-blue-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800">Exporter</button>
                   </div>
-                  <div className="flex items-center justify-between rounded-lg border border-red-200 bg-red-50 p-3">
-                    <div><p className="text-sm font-medium text-red-900">Supprimer le compte</p><p className="text-xs text-red-700">Suppression definitive de toutes les donnees</p></div>
-                    <button type="button" onClick={handleDeleteAccount} className="rounded-xl bg-red-600 px-3 py-2 text-xs font-semibold text-white hover:bg-red-700">Supprimer</button>
+                  <div className="flex items-center justify-between rounded-lg border border-red-200 bg-red-50 p-3 dark:border-red-900/60 dark:bg-red-950/35">
+                    <div><p className="text-sm font-medium text-red-900 dark:text-red-200">Supprimer le compte</p><p className="text-xs text-red-700 dark:text-red-300">Suppression definitive de toutes les donnees</p></div>
+                    <button type="button" onClick={handleDeleteAccount} className="rounded-xl bg-red-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600">Supprimer</button>
                   </div>
                 </div>
               </SettingCard>
@@ -775,73 +753,142 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      <SettingCard className="p-5 space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <SectionTitle>Mises a jour plateforme</SectionTitle>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={applyLatestDeployment}
-              disabled={!hasDeploymentUpdate}
-              className="inline-flex items-center rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-55"
-            >
-              Mettre a jour
-            </button>
-            <button
-              type="button"
-              onClick={restoreStableSnapshot}
-              className="inline-flex items-center rounded-lg border border-blue-100 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-blue-50"
-            >
-              Restaurer la plus recente
-            </button>
+      <SettingCard className="overflow-hidden border-slate-800/80 bg-gradient-to-br from-slate-950 via-slate-950 to-slate-900 p-0 shadow-[0_14px_36px_rgba(15,23,42,0.24)]">
+        <div className="border-b border-slate-800/90 px-4 py-4 sm:px-5">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="space-y-2">
+              <SectionTitle>Mises a jour plateforme</SectionTitle>
+              <h3 className="text-lg font-semibold tracking-tight text-slate-100 sm:text-xl">Versions, état, historique</h3>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={applyLatestDeployment}
+                disabled={!availableVersion}
+                className="inline-flex h-10 items-center justify-center rounded-xl bg-blue-600 px-3.5 text-sm font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-55"
+              >
+                Appliquer
+              </button>
+              <button
+                type="button"
+                onClick={restoreStableSnapshot}
+                className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-700 bg-slate-900 px-3.5 text-sm font-semibold text-slate-200 transition hover:bg-slate-800"
+              >
+                Restaurer la plus recente
+              </button>
+            </div>
           </div>
         </div>
 
-        <div className="rounded-xl border border-blue-100 bg-blue-50/60 px-3 py-2.5">
-          <p className="text-xs font-semibold uppercase tracking-[0.08em] text-blue-700">
-            {hasDeploymentUpdate ? "Une nouvelle version vous attend" : "Aucune nouvelle version disponible"}
-          </p>
-          <p className="mt-1 text-xs text-slate-600">
-            Version appliquee: {appliedDeploymentVersion ?? "inconnue"}
-          </p>
-          <p className="text-xs text-slate-600">
-            Version disponible: {latestDeploymentVersion ?? "inconnue"}
-          </p>
-        </div>
-
-        <p className="text-xs text-slate-500">
-          Lors d'une mise a jour, votre etat front+back est sauvegarde automatiquement. Vous pouvez ensuite revenir sur une ancienne version qui vous convenait.
-        </p>
-
-        <div className="max-h-56 overflow-y-auto rounded-xl border border-blue-100 bg-slate-50 p-2">
-          {versionHistory.length === 0 ? (
-            <p className="px-2 py-2 text-sm text-slate-500">Aucune version enregistree pour le moment.</p>
-          ) : (
-            <div className="space-y-2">
-              {versionHistory.map((version) => (
-                <div key={version.id} className="flex items-center justify-between rounded-lg border border-blue-100 bg-white px-3 py-2">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-semibold text-slate-900">{version.name}</p>
-                      {version.isActive && (
-                        <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-emerald-700">
-                          Version active
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs text-slate-500">{new Date(version.savedAt).toLocaleString("fr-FR")}</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => restoreVersionById(version.id)}
-                    className="rounded-lg border border-blue-100 bg-white px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-50"
-                  >
-                    Appliquer cette version
-                  </button>
+        <div className="grid gap-3 px-4 py-4 sm:px-5 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
+          <div className="space-y-3">
+            <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4">
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Actuelle</p>
+                  <h4 className="mt-1 text-base font-semibold text-slate-100">{currentVersion?.name ?? "inconnue"}</h4>
                 </div>
-              ))}
+                <span className="inline-flex rounded-full border border-emerald-500/30 bg-emerald-500/15 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-emerald-200">
+                  Active
+                </span>
+              </div>
+
+              <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">Statut</p>
+                  <p className="mt-1 text-sm font-semibold text-slate-100">Active</p>
+                </div>
+                <div className="rounded-xl border border-blue-500/20 bg-blue-500/10 p-3">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-blue-300">Proposée</p>
+                  <p className="mt-1 text-sm font-semibold text-blue-100">{availableVersion?.name ?? "aucune"}</p>
+                </div>
+                <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">Anciennes</p>
+                  <p className="mt-1 text-sm font-semibold text-slate-100">{archivedVersionCount}</p>
+                </div>
+              </div>
             </div>
-          )}
+
+            <div className="rounded-2xl border border-slate-800 bg-slate-950/60 p-3.5">
+              <p className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">Proposée</p>
+              <p className="mt-1 text-sm font-semibold text-slate-100">{availableVersion?.name ?? "Aucune"}</p>
+              <p className="mt-1 text-xs text-slate-400">Prête à appliquer.</p>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-3.5 sm:p-4">
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">Historique</p>
+                <h4 className="mt-1 text-sm font-semibold text-slate-100">Choix rapide</h4>
+              </div>
+              <span className="rounded-full border border-slate-700 bg-slate-900 px-2 py-0.5 text-[10px] font-semibold text-slate-300">
+                {versionHistory.length} version(s)
+              </span>
+            </div>
+
+            <div className="max-h-[280px] space-y-2 overflow-y-auto pr-1">
+              {versionHistory.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-slate-800 bg-slate-950/80 p-5 text-center">
+                  <p className="text-sm font-medium text-slate-400">Aucune version enregistrée pour le moment.</p>
+                </div>
+              ) : (
+                versionHistory.map((version) => {
+                  const isCurrent = version.isActive;
+                  const isNew = !version.isActive && version.id === availableVersion?.id;
+
+                  return (
+                    <div
+                      key={version.id}
+                      className={[
+                        "flex flex-col gap-2 rounded-2xl border p-3.5 transition sm:flex-row sm:items-center sm:justify-between",
+                        isCurrent
+                          ? "border-emerald-500/25 bg-emerald-500/10"
+                          : isNew
+                            ? "border-blue-500/25 bg-blue-500/10"
+                            : "border-slate-800 bg-slate-900/70",
+                      ].join(" ")}
+                    >
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="text-sm font-semibold text-slate-100">{version.name}</p>
+                          {isCurrent ? (
+                            <span className="inline-flex items-center rounded-full border border-emerald-500/30 bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-emerald-200">
+                              Active
+                            </span>
+                          ) : isNew ? (
+                            <span className="inline-flex items-center rounded-full border border-blue-500/30 bg-blue-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-blue-200">
+                              Proposée
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center rounded-full border border-slate-700 bg-slate-900 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-300">
+                              Ancienne
+                            </span>
+                          )}
+                        </div>
+                        <p className="mt-1 text-xs text-slate-400">{new Date(version.savedAt).toLocaleString("fr-FR")}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => restoreVersionById(version.id)}
+                        className={[
+                          "inline-flex h-9 items-center justify-center rounded-xl px-3.5 text-sm font-semibold transition",
+                          isCurrent
+                            ? "border border-emerald-500/25 bg-emerald-500/15 text-emerald-200 hover:bg-emerald-500/20"
+                            : isNew
+                              ? "border border-blue-500/25 bg-blue-500/15 text-blue-100 hover:bg-blue-500/20"
+                              : "border border-slate-700 bg-slate-900 text-slate-200 hover:bg-slate-800",
+                        ].join(" ")}
+                      >
+                        Choisir
+                      </button>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
         </div>
       </SettingCard>
     </div>

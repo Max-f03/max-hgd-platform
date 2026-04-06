@@ -27,10 +27,10 @@ const initialProjects: Project[] = [
 ];
 
 const statusConfig: Record<ProjectStatus, { label: string; bg: string; color: string }> = {
-  published: { label: "Publie", bg: "#DBEAFE", color: "#1D4ED8" },
-  draft: { label: "Brouillon", bg: "#FEF3C7", color: "#B45309" },
-  completed: { label: "Termine", bg: "#DCFCE7", color: "#15803D" },
-  archived: { label: "Archive", bg: "#F1F5F9", color: "#475569" },
+  published: { label: "Publie", bg: "var(--ui-status-info-bg)", color: "var(--ui-status-info-text)" },
+  draft: { label: "Brouillon", bg: "var(--ui-status-warning-bg)", color: "var(--ui-status-warning-text)" },
+  completed: { label: "Termine", bg: "var(--ui-status-success-bg)", color: "var(--ui-status-success-text)" },
+  archived: { label: "Archive", bg: "var(--ui-status-neutral-bg)", color: "var(--ui-status-neutral-text)" },
 };
 
 function getProjectInitials(title: string): string {
@@ -393,7 +393,7 @@ export default function ProjectsPage() {
                           <p className="mt-0.5 truncate text-[11px] font-medium uppercase tracking-[0.06em] text-slate-400">{project.categoryLabel}</p>
                         </div>
                         {project.featured ? (
-                          <span className="inline-flex h-6 items-center rounded-full border border-amber-200 bg-amber-50 px-2 text-[10px] font-semibold text-amber-700">
+                          <span className="inline-flex h-6 items-center rounded-full border border-amber-200 bg-amber-50 px-2 text-[10px] font-semibold text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/25 dark:text-amber-300">
                             Featured
                           </span>
                         ) : null}
@@ -447,7 +447,7 @@ export default function ProjectsPage() {
                       </div>
                       <div className="mt-0.5 flex items-center gap-1 text-[11px] text-slate-400">
                         <span>{project.categoryLabel}</span>
-                        {project.featured ? <span className="inline-flex rounded-full border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">Featured</span> : null}
+                        {project.featured ? <span className="inline-flex rounded-full border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/25 dark:text-amber-300">Featured</span> : null}
                       </div>
                     </div>
                     <span className="inline-flex w-fit rounded-full px-2 py-1 text-[10px] font-semibold" style={{ background: statusConfig[project.status].bg, color: statusConfig[project.status].color }}>
@@ -489,7 +489,7 @@ export default function ProjectsPage() {
                   <p className="mt-0.5 text-sm text-slate-800">{selectedProject.date}</p>
                 </div>
                 {selectedProject.featured ? (
-                  <div className="rounded-lg border border-yellow-200 bg-yellow-50 px-2.5 py-1.5 text-[11px] font-semibold text-yellow-700">
+                  <div className="rounded-lg border border-yellow-200 bg-yellow-50 px-2.5 py-1.5 text-[11px] font-semibold text-yellow-700 dark:border-amber-900/50 dark:bg-amber-950/25 dark:text-amber-300">
                     Featured
                   </div>
                 ) : null}

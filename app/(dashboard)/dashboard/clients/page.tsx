@@ -6,12 +6,12 @@ import { useRouter, useSearchParams } from "next/navigation";
 import ClientForm, { type ClientData } from "@/components/dashboard/ClientForm";
 
 const avatarColors = [
-  { bg: "#DBEAFE", text: "#1D4ED8" },
-  { bg: "#EFF6FF", text: "#2563EB" },
-  { bg: "#DBEAFE", text: "#1D4ED8" },
-  { bg: "#FEF3C7", text: "#B45309" },
-  { bg: "#FCE7F3", text: "#BE185D" },
-  { bg: "#CFFAFE", text: "#0891B2" },
+  { bg: "var(--ui-status-info-bg)", text: "var(--ui-status-info-text)" },
+  { bg: "var(--ui-status-neutral-bg)", text: "var(--ui-status-neutral-text)" },
+  { bg: "var(--ui-status-info-bg)", text: "var(--ui-status-info-text)" },
+  { bg: "var(--ui-status-warning-bg)", text: "var(--ui-status-warning-text)" },
+  { bg: "var(--ui-status-info-bg)", text: "var(--ui-status-info-text)" },
+  { bg: "var(--ui-status-neutral-bg)", text: "var(--ui-status-neutral-text)" },
 ];
 
 type ClientStatus = "lead" | "active" | "completed";
@@ -33,9 +33,9 @@ interface Client {
 const initialClients: Client[] = [];
 
 const statusConfig = {
-  lead:      { label: "Lead",     bg: "#DBEAFE", color: "#1D4ED8" },
-  active:    { label: "Actif",    bg: "#DBEAFE", color: "#1D4ED8" },
-  completed: { label: "Complete", bg: "#F1F5F9", color: "#475569" },
+  lead:      { label: "Lead",     bg: "var(--ui-status-info-bg)", color: "var(--ui-status-info-text)" },
+  active:    { label: "Actif",    bg: "var(--ui-status-success-bg)", color: "var(--ui-status-success-text)" },
+  completed: { label: "Complete", bg: "var(--ui-status-neutral-bg)", color: "var(--ui-status-neutral-text)" },
 };
 
 export default function ClientsPage() {
@@ -480,7 +480,7 @@ function ClientsContent() {
                     <circle cx="12" cy="12" r="3" />
                   </svg>
                 </Link>
-                <Link href={`/dashboard/clients/${selectedClient.id}/edit`} className="inline-flex h-11 w-20 items-center justify-center rounded-xl border border-blue-300 bg-white text-blue-700 transition hover:bg-blue-50" title="Modifier" aria-label="Modifier le client">
+                <Link href={`/dashboard/clients/${selectedClient.id}/edit`} className="inline-flex h-11 w-20 items-center justify-center rounded-xl border border-blue-300 bg-white text-blue-700 transition hover:bg-blue-50 dark:border-slate-600 dark:bg-slate-900 dark:text-blue-300 dark:hover:bg-slate-800" title="Modifier" aria-label="Modifier le client">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
@@ -491,7 +491,7 @@ function ClientsContent() {
                   onClick={() => {
                     void handleDeleteClient(selectedClient.id, selectedClient.name);
                   }}
-                  className="inline-flex h-11 w-20 items-center justify-center rounded-xl border border-red-300 bg-white text-red-600 transition hover:bg-red-50"
+                  className="inline-flex h-11 w-20 items-center justify-center rounded-xl border border-red-300 bg-white text-red-600 transition hover:bg-red-50 dark:border-red-900/60 dark:bg-slate-900 dark:text-red-300 dark:hover:bg-red-950/30"
                   title="Supprimer" aria-label="Supprimer le client"
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -527,7 +527,7 @@ function ClientsContent() {
 
         <aside
           className={[
-            "absolute right-0 top-0 h-full w-full max-w-sm bg-white border-l border-slate-200 shadow-2xl",
+            "absolute right-0 top-0 h-full w-full max-w-sm bg-white border-l border-slate-200 shadow-2xl dark:bg-slate-900 dark:border-slate-700",
             "transform-gpu transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
             isCreatePanelOpen ? "translate-x-0" : "translate-x-full",
           ].join(" ")}
@@ -535,16 +535,16 @@ function ClientsContent() {
           aria-modal="true"
           aria-label="Creation client"
         >
-          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-700">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.12em]" style={{ color: "#1D4ED8" }}>Creation</p>
-              <h3 className="text-base font-semibold" style={{ color: "#0F172A" }}>Nouveau client</h3>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.12em]" style={{ color: "var(--ui-primary)" }}>Creation</p>
+              <h3 className="text-base font-semibold" style={{ color: "var(--ui-text)" }}>Nouveau client</h3>
             </div>
             <button
               type="button"
               onClick={() => setIsCreatePanelOpen(false)}
-              className="w-11 h-11 rounded-full flex items-center justify-center transition-colors hover:bg-slate-100"
-              style={{ color: "#64748B" }}
+              className="w-11 h-11 rounded-full flex items-center justify-center transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
+              style={{ color: "var(--ui-text-muted)" }}
               aria-label="Fermer"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

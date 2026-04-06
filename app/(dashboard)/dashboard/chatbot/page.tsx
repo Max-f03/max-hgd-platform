@@ -266,7 +266,7 @@ export default function ChatbotAdminPage() {
 
       {/* Alert Messages */}
       {error && (
-        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300">
           <div className="inline-flex items-center gap-2 font-medium">
             <AlertTriangle className="h-4 w-4" />
             {error}
@@ -275,7 +275,7 @@ export default function ChatbotAdminPage() {
       )}
 
       {success && (
-        <div className="rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+        <div className="rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-300">
           <p className="font-medium">{success}</p>
         </div>
       )}
@@ -294,9 +294,9 @@ export default function ChatbotAdminPage() {
             onClick={() => setActiveTab(tab)}
             className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition"
             style={{
-              background: activeTab === tab ? '#DBEAFE' : '#F8FAFC',
-              color: activeTab === tab ? '#1D4ED8' : '#334155',
-              border: activeTab === tab ? '1px solid #93C5FD' : '1px solid #E2E8F0',
+              background: activeTab === tab ? 'var(--ui-status-info-bg)' : 'var(--ui-input-bg)',
+              color: activeTab === tab ? 'var(--ui-status-info-text)' : 'var(--ui-text-secondary)',
+              border: '1px solid var(--ui-border)',
             }}
           >
             <Icon className="w-4 h-4" />

@@ -176,50 +176,48 @@ export default function AnalyticsPage() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.35fr_1fr]" style={{ animation: "reveal-up 0.7s ease-out both", animationDelay: "240ms" }}>
-        <AdminCard padding="md" className="rounded-3xl border-blue-100 bg-white">
-          <div className="mb-4 flex items-start justify-between gap-3">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]" style={{ animation: "reveal-up 0.7s ease-out both", animationDelay: "240ms" }}>
+        <AdminCard padding="md" className="min-w-0 overflow-hidden rounded-3xl border-blue-100 bg-white">
+          <div className="mb-6 flex items-start justify-between gap-4">
             <div>
               <h3 className="text-base font-semibold text-slate-900">Pipeline evolution (30 jours)</h3>
-              <p className="mt-1 text-xs text-slate-500">Projection des opportunites et deals clotures</p>
+              <p className="mt-1.5 text-xs text-slate-500">Projection des opportunites et deals clotures</p>
             </div>
             <div className="text-right">
               <p className="text-2xl font-semibold tracking-tight text-slate-900">72.500 $</p>
-              <p className="text-xs font-semibold text-blue-700">+18.4% ce mois</p>
+              <p className="mt-1 text-xs font-semibold text-blue-700">+18.4% ce mois</p>
             </div>
           </div>
-          <ChartLine />
+          <ChartLine height={280} />
         </AdminCard>
 
-        <AdminCard padding="md" className="rounded-3xl border-blue-100 bg-white">
+        <AdminCard padding="sm" className="min-w-0 h-full overflow-hidden rounded-3xl border-blue-100 bg-white">
           <div className="flex items-center justify-between">
             <h3 className="text-base font-semibold text-slate-900">Performance equipe</h3>
             <span className="rounded-lg bg-blue-50 px-2 py-1 text-[11px] font-semibold text-blue-700">Capacite sprint</span>
           </div>
 
-          <div className="mt-4 space-y-2.5">
+          <div className="mt-3 space-y-2">
             {teamPerformance.map((team) => (
               <div key={team.id}>
-                <div className="mb-1.5 flex items-center justify-between text-xs">
+                <div className="mb-1 flex items-center justify-between text-xs">
                   <span className="font-medium text-slate-600">{team.label}</span>
                   <span className="font-semibold text-slate-900">{team.value}%</span>
                 </div>
-                <div className="h-2.5 rounded-full bg-blue-50">
+                <div className="h-2 rounded-full bg-blue-50">
                   <div className="h-full rounded-full" style={{ width: `${team.value}%`, background: team.color }} />
                 </div>
               </div>
             ))}
           </div>
 
-          <div className="mt-5 rounded-2xl border border-blue-100 bg-blue-50/70 px-4 py-3">
+          <div className="mt-3 rounded-2xl border border-blue-100 bg-blue-50/70 px-3.5 py-2.5">
             <p className="text-xs font-medium text-slate-600">Disponibilite moyenne equipe</p>
             <p className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">76%</p>
           </div>
         </AdminCard>
-      </div>
 
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.35fr_1fr]" style={{ animation: "reveal-up 0.7s ease-out both", animationDelay: "350ms" }}>
-        <AdminCard padding="none" className="overflow-hidden rounded-3xl border-blue-100 bg-white">
+        <AdminCard padding="none" className="min-w-0 overflow-hidden rounded-3xl border-blue-100 bg-white">
           <div className="flex items-center justify-between border-b border-blue-50 px-5 py-4 sm:px-6">
             <div>
               <h3 className="text-base font-semibold text-slate-900">Acquisition sources</h3>
@@ -251,8 +249,8 @@ export default function AnalyticsPage() {
                       <span
                         className="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold"
                         style={{
-                          background: row.trend === "up" ? "#DBEAFE" : "#E2E8F0",
-                          color: row.trend === "up" ? "#1D4ED8" : "#475569",
+                          background: row.trend === "up" ? "var(--ui-status-info-bg)" : "var(--ui-status-neutral-bg)",
+                          color: row.trend === "up" ? "var(--ui-status-info-text)" : "var(--ui-status-neutral-text)",
                         }}
                       >
                         {row.conversion}
@@ -266,33 +264,37 @@ export default function AnalyticsPage() {
           </div>
         </AdminCard>
 
-        <AdminCard padding="lg" className="rounded-3xl border-blue-100 bg-white">
-          <h3 className="text-base font-semibold text-slate-900">Objectifs sprint</h3>
-          <p className="mt-1 text-xs text-slate-500">Suivi execution equipe commercial et delivery</p>
+        <AdminCard padding="md" className="min-w-0 h-full overflow-hidden rounded-3xl border-blue-100 bg-white">
+          <div className="flex h-full flex-col">
+            <div>
+              <h3 className="text-base font-semibold text-slate-900">Objectifs sprint</h3>
+              <p className="mt-1 text-xs text-slate-500">Suivi execution equipe commercial et delivery</p>
+            </div>
 
-          <div className="mt-5 space-y-3">
-            {sprintObjectives.map((objective) => (
-              <div key={objective.id} className="flex items-start gap-2.5 rounded-xl border border-blue-100 bg-blue-50/50 px-3 py-2.5">
-                <span
-                  className="mt-0.5 inline-flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-bold"
-                  style={{
-                    background: objective.done ? "#1D4ED8" : "#BFDBFE",
-                    color: objective.done ? "#FFFFFF" : "#1E40AF",
-                  }}
-                >
-                  {objective.done ? "✓" : "•"}
-                </span>
-                <span className="text-sm text-slate-700">{objective.label}</span>
-              </div>
-            ))}
+            <div className="mt-4 space-y-2.5">
+              {sprintObjectives.map((objective) => (
+                <div key={objective.id} className="flex items-start gap-2.5 rounded-xl border border-blue-100 bg-blue-50/50 px-3 py-2">
+                  <span
+                    className="mt-0.5 inline-flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-bold"
+                    style={{
+                      background: objective.done ? "#1D4ED8" : "#BFDBFE",
+                      color: objective.done ? "#FFFFFF" : "#1E40AF",
+                    }}
+                  >
+                    {objective.done ? "✓" : "•"}
+                  </span>
+                  <span className="text-sm text-slate-700">{objective.label}</span>
+                </div>
+              ))}
+            </div>
+
+            <Link
+              href="/dashboard/projects"
+              className="mt-auto inline-flex w-full items-center justify-center rounded-xl bg-blue-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+            >
+              Voir planning projet
+            </Link>
           </div>
-
-          <Link
-            href="/dashboard/projects"
-            className="mt-5 inline-flex w-full items-center justify-center rounded-xl bg-blue-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
-          >
-            Voir planning projet
-          </Link>
         </AdminCard>
       </div>
     </div>

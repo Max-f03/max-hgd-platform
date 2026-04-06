@@ -1,0 +1,63 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "dev-fresh-3001",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"run",
+				"dev"
+			],
+			"isBackground": true
+		},
+		{
+			"label": "kill-port-3000",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-Command",
+				"$conn = Get-NetTCPConnection -LocalPort 3000 -State Listen -ErrorAction SilentlyContinue; if ($conn) { Stop-Process -Id $conn[0].OwningProcess -Force; Write-Output ('killed:' + $conn[0].OwningProcess) } else { Write-Output 'none' }"
+			]
+		},
+		{
+			"label": "kill-port-3000-2",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-Command",
+				"$conn = Get-NetTCPConnection -LocalPort 3000 -State Listen -ErrorAction SilentlyContinue; if ($conn) { Stop-Process -Id $conn[0].OwningProcess -Force; Write-Output done } else { Write-Output none }"
+			]
+		},
+		{
+			"label": "dev-on-3000",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"run",
+				"dev"
+			],
+			"isBackground": true
+		},
+		{
+			"label": "kill-next-16140",
+			"type": "shell",
+			"command": "taskkill",
+			"args": [
+				"/PID",
+				"16140",
+				"/F"
+			]
+		},
+		{
+			"label": "dev-single-3000",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"run",
+				"dev"
+			],
+			"isBackground": true
+		}
+	]
+}

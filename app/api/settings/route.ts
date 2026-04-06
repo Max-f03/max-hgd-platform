@@ -72,10 +72,11 @@ let accountState: AccountState = {
 };
 
 const VERSION_LIMIT = 30;
-const DEPLOYMENT_VERSION =
-  process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ??
-  process.env.NEXT_PUBLIC_APP_VERSION ??
-  "local-dev";
+const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION ?? "1.0.0";
+const COMMIT_SHA = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7);
+const DEPLOYMENT_VERSION = COMMIT_SHA
+  ? `v${APP_VERSION}+${COMMIT_SHA}`
+  : `v${APP_VERSION}-dev`;
 let accountHydratedFromDb = false;
 let persistentVersioningAvailable = true;
 let fallbackVersions: SettingsVersion[] = [];
@@ -245,10 +246,22 @@ async function readVersionsFromDb(): Promise<SettingsVersion[]> {
   }
 
   try {
-    const rows = await prisma.adminVersionHistory.findMany({
+    let rows = await prisma.adminVersionHistory.findMany({
       orderBy: { createdAt: "desc" },
       take: VERSION_LIMIT,
     });
+
+    if (rows.length === 0) {
+      const seeded = await prisma.adminVersionHistory.create({
+        data: {
+          name: "v1.0.0",
+          isActive: true,
+          account: cloneAccountState(accountState) as unknown as Prisma.InputJsonValue,
+          uiState: null as unknown as Prisma.InputJsonValue,
+        },
+      });
+      rows = [seeded];
+    }
 
     return rows.map((row) =>
       toSettingsVersion({
@@ -437,6 +450,7 @@ export async function POST(request: Request) {
       uiState?: SettingsUiSnapshot;
       versionId?: string;
       makeActive?: boolean;
+      versionName?: string;
     };
 
     if (!body.action) {
@@ -527,10 +541,28 @@ export async function POST(request: Request) {
             })
           : fallbackVersions.filter((version) => version.savedAt.startsWith(now.toISOString().slice(0, 10))).length;
 
-        const versionName = buildReadableVersionName(now, todayCount + 1);
+        const requestedVersionName = typeof body.versionName === "string" ? body.versionName.trim() : "";
+        const normalizedRequestedVersionName = requestedVersionName
+          ? requestedVersionName.startsWith("v")
+            ? requestedVersionName
+            : `v${requestedVersionName}`
+          : "";
+
+        if (normalizedRequestedVersionName) {
+          const validVersionPattern = /^v\d+\.\d+\.\d+(?:[-+][A-Za-z0-9.-]+)?$/;
+          if (!validVersionPattern.test(normalizedRequestedVersionName)) {
+            return NextResponse.json({ error: "Format de version invalide. Exemple: v1.2.0" }, { status: 400 });
+          }
+        }
+
+        const versionName = normalizedRequestedVersionName || buildReadableVersionName(now, todayCount + 1);
         const shouldMarkActive = body.makeActive ?? true;
 
         if (!persistentVersioningAvailable) {
+          if (fallbackVersions.some((version) => version.name === versionName)) {
+            return NextResponse.json({ error: "Cette version existe deja." }, { status: 409 });
+          }
+
           if (shouldMarkActive) {
             fallbackVersions = fallbackVersions.map((version) => ({ ...version, isActive: false }));
           }
@@ -546,6 +578,14 @@ export async function POST(request: Request) {
 
           fallbackVersions = [fallbackVersion, ...fallbackVersions].slice(0, VERSION_LIMIT);
           return NextResponse.json({ success: true, version: fallbackVersion, storage: "memory" });
+        }
+
+        const existingVersion = await prisma.adminVersionHistory.findFirst({
+          where: { name: versionName },
+          select: { id: true },
+        });
+        if (existingVersion) {
+          return NextResponse.json({ error: "Cette version existe deja." }, { status: 409 });
         }
 
         if (shouldMarkActive) {
