@@ -2,7 +2,7 @@ import Reveal from "@/components/ui/Reveal";
 
 export default function About() {
   return (
-    <section id="about" className="py-24 px-4">
+    <section id="about" className="py-16 lg:py-20 px-4">
       <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
         <Reveal variant="left">
           <div className="relative">
@@ -22,7 +22,7 @@ export default function About() {
             <span className="text-xs font-semibold tracking-widest uppercase text-primary-500">
               A propos
             </span>
-            <h2 className="text-3xl sm:text-4xl font-medium text-neutral-900 leading-tight">
+            <h2 className="text-2xl sm:text-3xl lg:text-3xl font-medium text-neutral-900 leading-tight">
               Designer &amp; Developpeur passionne par l&apos;experience utilisateur
             </h2>
           </div>

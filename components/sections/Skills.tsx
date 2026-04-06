@@ -60,7 +60,7 @@ const categories: SkillCategory[] = [
 
 export default function Skills() {
   return (
-    <section id="skills" className="py-24 px-4">
+    <section id="skills" className="py-16 lg:py-20 px-4">
       <div className="max-w-5xl mx-auto flex flex-col gap-12">
         <Reveal>
           <div className="flex flex-col gap-3 text-center">
@@ -69,7 +69,7 @@ export default function Skills() {
                 Competences
               </span>
             </div>
-            <h2 className="text-3xl sm:text-4xl font-medium text-neutral-900">
+            <h2 className="text-2xl sm:text-3xl font-medium text-neutral-900">
               Ce que je sais faire
             </h2>
             <p className="text-neutral-500 max-w-xl mx-auto text-sm leading-relaxed">

@@ -129,7 +129,7 @@ export default function Contact() {
   };
 
   return (
-    <section id="contact" className="py-24 px-4 bg-white">
+    <section id="contact" className="py-16 lg:py-20 px-4 bg-white">
       <div className="max-w-5xl mx-auto flex flex-col gap-12">
         <Reveal>
           <div className="flex flex-col gap-3 text-center">
@@ -138,7 +138,7 @@ export default function Contact() {
                 Contact
               </span>
             </div>
-            <h2 className="text-3xl sm:text-4xl font-medium text-neutral-900">
+            <h2 className="text-2xl sm:text-3xl font-medium text-neutral-900">
               Un projet, une idee ?
             </h2>
             <p className="text-neutral-500 max-w-md mx-auto text-sm leading-relaxed">

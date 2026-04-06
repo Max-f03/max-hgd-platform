@@ -7,7 +7,7 @@ export default function Hero() {
   return (
     <section
       id="home"
-      className="relative min-h-screen flex items-center justify-center overflow-hidden px-4 pt-28 pb-20"
+      className="relative min-h-screen flex items-center justify-center overflow-hidden px-4 pt-24 pb-16 lg:pt-20 lg:pb-14"
       style={{
         background: "radial-gradient(ellipse at top left, #dce8f8 0%, #ffffff 65%)",
       }}
@@ -37,13 +37,13 @@ export default function Hero() {
         <Reveal delay={100}>
           <div className="flex flex-col gap-2">
             <h1
-              className="text-4xl sm:text-5xl font-normal text-neutral-900 leading-tight tracking-tight"
+              className="text-3xl sm:text-4xl lg:text-[3.2rem] font-normal text-neutral-900 leading-tight tracking-tight"
               style={{ fontStyle: "italic" }}
             >
               Je suis Max-Fructueux HOUNGBEDJI,
             </h1>
             <p
-              className="text-3xl sm:text-4xl font-normal text-primary-500 leading-tight"
+              className="text-2xl sm:text-3xl lg:text-[2.45rem] font-normal text-primary-500 leading-tight"
               style={{ fontStyle: "italic" }}
             >
               UX/UI Designer &amp; Frontend Developer
