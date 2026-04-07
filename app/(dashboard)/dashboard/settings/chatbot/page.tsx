@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/textarea";
-import { Bot, Cpu, Save, Plus, Trash2, Loader2, Send, Sparkles, Settings, Users, HelpCircle, MessageSquare, BarChart3, Link as LinkIcon, Edit, X, Check, Eye, User } from "lucide-react";
+import { Bot, Cpu, Save, Plus, Trash2, Loader2, Send, Sparkles, Settings, Users, HelpCircle, MessageSquare, BarChart3, Link as LinkIcon, Edit, Check, Eye, User } from "lucide-react";
 import { toast } from "sonner";
 
 interface QuickAction {
@@ -364,7 +364,7 @@ export default function ChatbotSettingsPage() {
         setStats(data);
       }
     } catch (error) {
-      console.error("Fetch error:", error);
+  console.error("Fetch error:", error);
     } finally {
       setLoading(false);
     }
@@ -428,7 +428,7 @@ export default function ChatbotSettingsPage() {
       } else {
         toast.error("Erreur lors de la sauvegarde");
       }
-    } catch (error) {
+    } catch {
       console.error("Save error:", error);
       toast.error("Erreur lors de la sauvegarde");
     } finally {
@@ -459,7 +459,7 @@ export default function ChatbotSettingsPage() {
       } else {
         toast.error("Erreur");
       }
-    } catch (error) {
+    } catch {
       toast.error("Erreur");
     }
   };
@@ -471,7 +471,7 @@ export default function ChatbotSettingsPage() {
         setServices(services.filter((s) => s.id !== id));
         toast.success("Supprime");
       }
-    } catch (error) {
+    } catch {
       toast.error("Erreur");
     }
   };
@@ -497,7 +497,7 @@ export default function ChatbotSettingsPage() {
         setEditingSocial(null);
         toast.success(editingSocial.id ? "Reseau mis a jour" : "Reseau ajoute");
       }
-    } catch (error) {
+    } catch {
       toast.error("Erreur");
     }
   };
@@ -509,7 +509,7 @@ export default function ChatbotSettingsPage() {
         setSocialLinks(socialLinks.filter((s) => s.id !== id));
         toast.success("Supprime");
       }
-    } catch (error) {
+    } catch {
       toast.error("Erreur");
     }
   };
@@ -535,7 +535,7 @@ export default function ChatbotSettingsPage() {
         setEditingFAQ(null);
         toast.success(editingFAQ.id ? "FAQ mise a jour" : "FAQ ajoutee");
       }
-    } catch (error) {
+    } catch {
       toast.error("Erreur");
     }
   };
@@ -547,7 +547,7 @@ export default function ChatbotSettingsPage() {
         setFaqs(faqs.filter((f) => f.id !== id));
         toast.success("Supprime");
       }
-    } catch (error) {
+    } catch {
       toast.error("Erreur");
     }
   };
@@ -1196,7 +1196,7 @@ export default function ChatbotSettingsPage() {
                       <CardContent>
                         {stats.topThemes.length > 0 ? (
                           <div className="space-y-3">
-                            {stats.topThemes.map((item, i) => (
+                            {stats.topThemes.map((item) => (
                               <div key={item.theme} className="flex items-center justify-between">
                                 <span style={{ color: "var(--ui-text)" }}>{item.theme}</span>
                                 <div className="flex items-center gap-2">
@@ -1240,3 +1240,4 @@ export default function ChatbotSettingsPage() {
     </div>
   );
 }
+

@@ -8,7 +8,11 @@ interface ThemeCtx { theme: Theme; toggle: () => void }
 const Ctx = createContext<ThemeCtx>({ theme: "light", toggle: () => {} })
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>("light")
+  const [theme, setTheme] = useState<Theme>(() => {
+    if (typeof window === "undefined") return "light"
+    const stored = localStorage.getItem("admin-theme") as Theme | null
+    return stored ?? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+  })
 
   // Applique la classe dark sur <html>
   useEffect(() => {
@@ -18,13 +22,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       document.documentElement.classList.remove("dark")
     }
   }, [theme])
-
-  // Initialisation depuis localStorage ou préférence système
-  useEffect(() => {
-    const stored = localStorage.getItem("admin-theme") as Theme | null
-    const pref = stored ?? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
-    setTheme(pref)
-  }, [])
 
   function toggle() {
     setTheme(prev => {

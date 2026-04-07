@@ -13,9 +13,12 @@ function NavigationBar() {
   useEffect(() => {
     if (pathname !== prev.current) {
       prev.current = pathname;
-      setStatus("done");
-      const t = setTimeout(() => setStatus("idle"), 500);
-      return () => clearTimeout(t);
+      const showDone = setTimeout(() => setStatus("done"), 0);
+      const clearDone = setTimeout(() => setStatus("idle"), 500);
+      return () => {
+        clearTimeout(showDone);
+        clearTimeout(clearDone);
+      };
     }
   }, [pathname]);
 

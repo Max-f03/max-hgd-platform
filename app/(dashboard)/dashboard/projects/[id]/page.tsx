@@ -481,7 +481,7 @@ export default function ProjectKanbanPage() {
             Projet cree
           </p>
           <p className="mt-1 text-sm" style={{ color: "var(--ui-text)" }}>
-            Projet cree avec workflow "{createdWorkflow || "workflow standard"}".
+            Projet cree avec workflow &quot;{createdWorkflow || "workflow standard"}&quot;.
           </p>
           <p className="mt-1 text-xs" style={{ color: "var(--ui-text-muted)" }}>
             {generatedTasks > 0

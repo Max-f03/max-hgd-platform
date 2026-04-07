@@ -73,6 +73,7 @@ function Button({
   asChild: _asChild,
   ...props
 }: ButtonProps) {
+  void _asChild;
   return (
     <button
       type={type}

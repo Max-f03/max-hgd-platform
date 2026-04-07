@@ -162,7 +162,7 @@ export default function Contact() {
               </p>
               {emailSent === false && (
                 <p className="text-xs text-amber-600">
-                  Message enregistre. L'envoi email n'est pas configure pour le moment.
+                  Message enregistre. L&apos;envoi email n&apos;est pas configure pour le moment.
                 </p>
               )}
               <button

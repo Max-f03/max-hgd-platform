@@ -230,42 +230,6 @@ export default function SettingsPage() {
     void loadVersionHistory();
   }, []);
 
-  function buildSnapshot(): StableSnapshot {
-    return {
-      profileForm,
-      prefs,
-      avatarFileName,
-      activeSection,
-    };
-  }
-
-  async function saveUiVersion({ silent = false, makeActive = true }: { silent?: boolean; makeActive?: boolean } = {}) {
-    try {
-      const snapshot = buildSnapshot();
-      const response = await fetch("/api/settings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "createVersion", uiState: snapshot, makeActive }),
-      });
-      if (!response.ok) {
-        const payload = (await response.json().catch(() => ({}))) as { error?: string };
-        if (!silent) {
-          flash("error", payload.error ?? "Impossible d'enregistrer la version plateforme.");
-        }
-        return;
-      }
-
-      await loadVersionHistory();
-      if (!silent) {
-        flash("success", "Nouvelle version front+back enregistree.");
-      }
-    } catch {
-      if (!silent) {
-        flash("error", "Impossible d'enregistrer la version plateforme.");
-      }
-    }
-  }
-
   async function applyLatestDeployment() {
     const latestNonActiveVersion = versionHistory.find((version) => !version.isActive);
     if (!latestNonActiveVersion) {
@@ -717,7 +681,7 @@ export default function SettingsPage() {
                 </SettingCard>
 
                 <SettingCard className="p-5 sm:p-6 space-y-3">
-                  <SectionTitle>Langue de l'interface</SectionTitle>
+                  <SectionTitle>Langue de l&apos;interface</SectionTitle>
                   <select
                     value={prefs.language}
                     onChange={(e) => setPrefs((p) => ({ ...p, language: e.target.value }))}

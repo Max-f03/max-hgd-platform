@@ -128,7 +128,6 @@ async function main() {
 
   // Seed time entries for dashboard stats
   const now = new Date()
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
 
   // Delete old time entries to avoid duplicates
   await prisma.timeEntry.deleteMany({

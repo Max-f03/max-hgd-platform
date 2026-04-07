@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { AlertTriangle, Plus, Trash2, MessageSquare, Zap, Settings as SettingsIcon, Clock3, ChevronRight } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
@@ -99,7 +99,7 @@ export default function ChatbotAdminPage() {
   }, []);
 
   // Load conversations
-  const loadConversations = async () => {
+  const loadConversations = useCallback(async () => {
     if (activeTab !== 'history' || conversationsLoading) return;
 
     setConversationsLoading(true);
@@ -113,13 +113,13 @@ export default function ChatbotAdminPage() {
     } finally {
       setConversationsLoading(false);
     }
-  };
+  }, [activeTab, conversationsLoading]);
 
   useEffect(() => {
     if (activeTab === 'history') {
       loadConversations();
     }
-  }, [activeTab]);
+  }, [activeTab, loadConversations]);
 
   // Save general settings
   const handleSaveGeneral = async () => {
@@ -339,7 +339,7 @@ export default function ChatbotAdminPage() {
                 rows={3}
                 placeholder="Votre message d'accueil..."
               />
-              <p className="text-xs text-slate-500 mt-2">Affiché à l'ouverture du widget</p>
+              <p className="text-xs text-slate-500 mt-2">Affiché à l&apos;ouverture du widget</p>
             </div>
 
             {/* Personality */}
@@ -379,7 +379,7 @@ export default function ChatbotAdminPage() {
       {activeTab === 'actions' && (
         <div className="space-y-6">
           <AdminCard padding="lg" className="rounded-3xl border-blue-100 bg-white">
-            <h2 className="text-xl font-semibold text-slate-900 mb-6">Boutons d'action rapide</h2>
+            <h2 className="text-xl font-semibold text-slate-900 mb-6">Boutons d&apos;action rapide</h2>
             <p className="text-sm text-slate-500 mb-6">
               Personnalisez les actions qui apparaissent dans le widget
             </p>
@@ -431,7 +431,7 @@ export default function ChatbotAdminPage() {
                 className="w-full bg-white hover:bg-blue-50 text-blue-700 border border-blue-100 flex items-center justify-center gap-2 py-2 rounded-lg"
               >
                 <Plus className="w-4 h-4" />
-                Ajouter l'action
+                Ajouter l&apos;action
               </Button>
             </div>
 
@@ -510,7 +510,7 @@ export default function ChatbotAdminPage() {
                 ].map(({ value, label, desc }) => (
                   <button
                     key={value}
-                    onClick={() => setSettings({ ...settings, llmProvider: value as any })}
+                    onClick={() => setSettings({ ...settings, llmProvider: value as ChatbotSettings['llmProvider'] })}
                     className={`p-3 rounded-lg border-2 text-left transition-all ${
                       settings.llmProvider === value
                         ? 'border-blue-500 bg-blue-500/10'

@@ -281,7 +281,6 @@ export async function POST(request: Request) {
     }
 
     // Ignore stale or invalid client IDs for drafts (e.g. old mock ids from URL).
-    const clientId = linkedClient ? incomingClientId : null;
     const rawTags = payload.technologies?.length ? payload.technologies : [resolvedCategory];
     const workflowMode = body.workflow?.mode ?? payload.workflowMode ?? "template";
     const workflowTemplate = body.workflow?.templateKey ?? payload.workflowTemplate ?? "site-web";

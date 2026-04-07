@@ -2,7 +2,6 @@
 
 import { useMemo, useRef, useState, useEffect } from "react";
 import ImageUploader, { type UploadImageItem } from "@/components/dashboard/ImageUploader";
-import Button from "@/components/ui/Button";
 
 export type ContentBlockType = "text" | "image" | "gallery" | "video" | "quote" | "comparison" | "code" | "embed";
 
@@ -196,7 +195,7 @@ export default function RichContentEditor({ blocks, onChange }: RichContentEdito
         }));
       }
     });
-  }, []);
+  }, [blocks, blockHistory]);
 
   function addBlock(type: ContentBlockType) {
     const newBlock = createBlock(type);

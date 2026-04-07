@@ -9,7 +9,6 @@ import ImageUploader, { type UploadImageItem } from "@/components/dashboard/Imag
 import TagsInput from "@/components/dashboard/TagsInput";
 import RichContentEditor, { type ContentBlock } from "@/components/dashboard/RichContentEditor";
 import DatePicker from "@/components/dashboard/DatePicker";
-import Link from "next/link";
 
 export type ProjectStatus = "draft" | "published" | "completed" | "archived";
 export type WorkflowMode = "template" | "empty" | "duplicate";
