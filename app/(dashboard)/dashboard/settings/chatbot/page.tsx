@@ -322,7 +322,7 @@ export default function ChatbotSettingsPage() {
       } else {
         setConversations([]);
       }
-    } catch {
+    } catch (error) {
       setConversations([]);
     }
   };
@@ -377,7 +377,7 @@ export default function ChatbotSettingsPage() {
         const data = (await res.json()) as ChatbotConversation;
         setSelectedConversation(data);
       }
-    } catch {
+    } catch (error) {
       toast.error("Erreur lors du chargement");
     }
   };
@@ -396,7 +396,7 @@ export default function ChatbotSettingsPage() {
         );
         toast.success("Statut mis a jour");
       }
-    } catch {
+    } catch (error) {
       toast.error("Erreur");
     }
   };
@@ -409,7 +409,7 @@ export default function ChatbotSettingsPage() {
         setSelectedConversation(null);
         toast.success("Conversation supprimee");
       }
-    } catch {
+    } catch (error) {
       toast.error("Erreur");
     }
   };
@@ -428,7 +428,7 @@ export default function ChatbotSettingsPage() {
       } else {
         toast.error("Erreur lors de la sauvegarde");
       }
-    } catch {
+    } catch (error) {
       console.error("Save error:", error);
       toast.error("Erreur lors de la sauvegarde");
     } finally {
@@ -459,7 +459,7 @@ export default function ChatbotSettingsPage() {
       } else {
         toast.error("Erreur");
       }
-    } catch {
+    } catch (error) {
       toast.error("Erreur");
     }
   };
@@ -471,7 +471,7 @@ export default function ChatbotSettingsPage() {
         setServices(services.filter((s) => s.id !== id));
         toast.success("Supprime");
       }
-    } catch {
+    } catch (error) {
       toast.error("Erreur");
     }
   };
@@ -497,7 +497,7 @@ export default function ChatbotSettingsPage() {
         setEditingSocial(null);
         toast.success(editingSocial.id ? "Reseau mis a jour" : "Reseau ajoute");
       }
-    } catch {
+    } catch (error) {
       toast.error("Erreur");
     }
   };
@@ -509,7 +509,7 @@ export default function ChatbotSettingsPage() {
         setSocialLinks(socialLinks.filter((s) => s.id !== id));
         toast.success("Supprime");
       }
-    } catch {
+    } catch (error) {
       toast.error("Erreur");
     }
   };
@@ -535,7 +535,7 @@ export default function ChatbotSettingsPage() {
         setEditingFAQ(null);
         toast.success(editingFAQ.id ? "FAQ mise a jour" : "FAQ ajoutee");
       }
-    } catch {
+    } catch (error) {
       toast.error("Erreur");
     }
   };
@@ -547,7 +547,7 @@ export default function ChatbotSettingsPage() {
         setFaqs(faqs.filter((f) => f.id !== id));
         toast.success("Supprime");
       }
-    } catch {
+    } catch (error) {
       toast.error("Erreur");
     }
   };
